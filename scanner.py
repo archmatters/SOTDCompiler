@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import makers
+import scents
 
 import datetime
 import json
@@ -111,7 +112,7 @@ def scanComment( tlc, post_date, dataFile ):
 
     data = [ post_date.strftime('%Y-%m-%d'),
             datetime.datetime.fromtimestamp(tlc.created_utc).strftime('%H:%M:%S'),
-            author_name, details['maker'], details['scent'],
+            author_name, details['maker'], details['scent'], details['confidence'],
             'https://old.reddit.com' + tlc.permalink ]
     dataFile.write('"')
     for i in range(len(data)):
@@ -134,25 +135,41 @@ def scanBody( tlc, silent = False ):
     maker = ''
     scent = ''
     resolved = False
+    confidence_max = 8
+    confidence = 0
 
     # TODO remove markdown but NOT links
     # some people use 'maker - scent [link to scent](http...)
     lm = lather_pattern.search(tlc.body)
     if lm:
         lather = lm.group(1)
+        confidence += 2
         for pattern in makers.maker_pats:
             result = pattern.match(lather)
             if result:
-                resolved = True
                 maker = makers.maker_pats[pattern]
                 scent = result.group(1)
+                resolved = True
+                confidence += 3
                 break
+        scent_pats = None
+        if maker and maker in scents.scent_pats:
+            scent_pats = scents.scent_pats[maker]
+
         # fallback case
         if not scent:
-            lpos = lather.find(' - ')
-            if lpos > 1 and not type_suffix_pattern.match(lather, lpos):
-                maker = lather[0:lpos]
-                scent = lather[lpos + 3:]
+            if scent_pats and len(scent_pats) == 1:
+                # single known scent
+                confidence += 3
+                for x in scent_pats:
+                    scent = scent_pats[x]
+            else:
+                confidence -= 2
+                lpos = lather.find(' - ')
+                if lpos > 1 and not type_suffix_pattern.match(lather, lpos):
+                    maker = lather[0:lpos]
+                    scent = lather[lpos + 3:]
+                    confidence += 1
 
         # some people make it possessive
         result = posessive_pattern.match(scent)
@@ -176,6 +193,7 @@ def scanBody( tlc, silent = False ):
         
         result = type_suffix_pattern.search(scent)
         if result:
+            confidence += 3
             scent = scent[0:result.start()]
         
         scent = scent.strip()
@@ -197,7 +215,8 @@ def scanBody( tlc, silent = False ):
         'lather': lather,
         'maker': maker,
         'scent': scent,
-        'known_maker': resolved
+        'known_maker': resolved,
+        'confidence': int(confidence * 100 / confidence_max)
     }
 
 
