@@ -11,8 +11,8 @@ import scents
 
 from pathlib import Path
 
-# spot check for the given data file pattern
-check_glob = '2020-12-31*.json'
+# spot check for the given data file pattern, username, and comment ID
+check_glob = '2020-12-*.json'
 check_name = ''
 check_id = ''
 

@@ -6,11 +6,18 @@ _apostophe = '(?:\'|&#39;|’|)'
 _any_and = '\\s*(?:&(?:amp;|)|and|\+)\\s*'
 
 _scent_pats = {
-    'Abbate y la Mantia': { },
+    'Abbate y la Mantia': {
+        'krokos': 'Krokos',
+        'crumiro': 'Crumiro',
+        'matteo 9,11': 'Matteo 9,11',
+     },
 
     'Acqua di Parma': { },
 
-    'Apex Alchemy Soaps': { },
+    'Apex Alchemy Soaps': {
+        'American Pi': 'American Pi',
+        'Nightcrawler': 'Nightcrawler'
+     },
 
     'Archaic Alchemy': { },
 
@@ -34,7 +41,11 @@ _scent_pats = {
         'oh?' + _apostophe + ',?\\s*delight': 'O, Delight!',
         'brew ha': 'Brew Ha-Ha',
         'hallow': 'Hallows',
-        'paganini': 'Paganini\'s Violin'
+        'paganini': 'Paganini\'s Violin',
+        'leviathan': 'Leviathan',
+        'beaudelaire': 'Beaudelaire',
+        'foug[èeé]re gothi': 'Fougère Gothique',
+        'foug[èeé]re angel': 'Fougère Angelique'
      },
     
     'Black Ship Grooming Co.': { },
@@ -51,7 +62,12 @@ _scent_pats = {
 
     'CBL Soaps': { },
 
-    'Cella': { '': 'Cella' },
+    'Cella': {
+        'soap': 'Cream soap',
+        '(?:cella |)crema sapone': 'Cream soap',
+        '(?:cella |)crema d[ae] barba': 'Cream',
+        'aloe vera cream': 'Aloe Vera cream',
+    },
 
     'Central Texas Soaps': { },
 
@@ -165,7 +181,10 @@ _scent_pats = {
 
     'Phoenix Artisan Accoutrements': { },
 
-    'Pré de Provence': { },
+    'Pré de Provence': { 
+        '(?:number|no\.?|num\.?)\\s*63': 'No. 63',
+        'bergamot' + _any_and + 'thyme': 'Bergamot and Thyme'
+    },
 
     'Proraso': { },
 
@@ -203,7 +222,12 @@ _scent_pats = {
 
     'Taylor of Old Bond Street': { },
 
-    'Vitos': { },
+    'Vitos': {
+        'verde': 'Green',
+        'rosso': 'Red',
+        'Extra Super': 'Red',
+        'eucalyptus': 'Lanolin & Eucalyptus'
+     },
 
     'Wholly Kaw': { },
 
@@ -236,7 +260,7 @@ def _compile( name ):
 def matchScent( maker, scent ):
     """ Attempts to match a scent name.  If successful, a dict is returned with the
         following elements:
-            'result': the result object from re.match()
+            'result': the result object from Pattern.match()
             'name': the standard scent name
         Otherwise None is returned.
     """
@@ -246,5 +270,16 @@ def matchScent( maker, scent ):
         result = pattern.match(scent)
         if result:
             return { 'result': result, 'name': _compiled_pats[maker][pattern] }
+    return None
+
+def getSingleScent( maker ):
+    """ If only one single scent is known for this maker, its name is returned.
+        Otherwise None is returned.
+    """
+    if not _compile(maker):
+        return None
+    if len(_compiled_pats[maker]) == 1:
+        for x in _compiled_pats[maker]:
+            return _compiled_pats[maker][x]
     return None
 

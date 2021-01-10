@@ -12,9 +12,10 @@ from pathlib import Path
 
 #pre_pattern = re.compile('\\bpre\s*(?:shave|)\\s*\\W*\\s*(\\S.*)', re.IGNORECASE)
 #brush_pattern = re.compile('\\bbrush\\s*\\W*\\s*(\\S.*)', re.IGNORECASE)
-lather_pattern = re.compile('\n[^a-z]*(?:lather|shaving\\s+soap|soap|cream|gel\\b)[\\s\\W]*(\\S.*)', re.IGNORECASE)
-type_suffix_pattern = re.compile(' - (?:soap|cream)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
-separator_pattern = re.compile('\\s*(?:-+|:|,)\\s*')
+#lather_pattern = re.compile('\n[^a-z]*(?:lather|shaving\\s+soap|soap|cream|gel\\b)[\\s\\W]*(\\S.*)', re.IGNORECASE)
+lather_pattern = re.compile('(?:^|\n)[^a-z]*(?:lather|shaving\\s+(?:soap|cream)|soap|cream|gel\\b)(?:\\s*[/&]\\s*(?:splash|balm)(?:\\s*[/&]\\s*WH|)|)[^a-z0-9]*(\\S.*)', re.IGNORECASE)
+type_suffix_pattern = re.compile('(?: - (?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
+separator_pattern = re.compile('\\s*(?:-+|:|,|\|)\\s*')
 posessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
 
 sotd_pattern = re.compile('sotd', re.IGNORECASE)
@@ -112,8 +113,8 @@ def scanComment( tlc, post_date, dataFile ):
 
     data = [ post_date.strftime('%Y-%m-%d'),
             datetime.datetime.fromtimestamp(tlc.created_utc).strftime('%H:%M:%S'),
-            author_name, details['maker'], details['scent'], details['confidence'],
-            'https://old.reddit.com' + tlc.permalink ]
+            author_name, details['maker'], details['scent'], str(details['confidence']),
+            details['lather'], 'https://old.reddit.com' + tlc.permalink ]
     dataFile.write('"')
     for i in range(len(data)):
         if i > 0:
@@ -152,12 +153,12 @@ def scanBody( tlc, silent = False ):
             confidence += 3
 
         # fallback case
-        if not scent:
-            if scent_pats and len(scent_pats) == 1:
+        if maker and not scent:
+            single = scents.getSingleScent(maker)
+            if single:
                 # single known scent
                 confidence += 3
-                for x in scent_pats:
-                    scent = scent_pats[x]
+                scent = single
             else:
                 confidence -= 2
                 lpos = lather.find(' - ')
@@ -165,6 +166,11 @@ def scanBody( tlc, silent = False ):
                     maker = lather[0:lpos]
                     scent = lather[lpos + 3:]
                     confidence += 1
+        elif not scent:
+            lpos = lather.find(' - ')
+            if lpos > 1:
+                maker = lather[0:lpos]
+                scent = lather[lpos + 3:]
 
         # some people make it possessive
         result = posessive_pattern.match(scent)
@@ -194,26 +200,102 @@ def scanBody( tlc, silent = False ):
         scent = scent.strip()
 
         # now, finally
-        result = scents.matchScent(maker, scent)
-        if result:
-            confidence += 2
-            scent = result['name']
+        if maker:
+            result = scents.matchScent(maker, scent)
+            if result:
+                confidence += 2
+                scent = result['name']
+        else:
+            maker = lather.strip()
+            lpos = maker.find('](')
+            if lpos > 0:
+                bpos = maker.find('[', 0, lpos)
+                if bpos > 0:
+                    maker = maker[0:bpos]
+                elif bpos == 0:
+                    maker = maker[1:lpos]
+                else:
+                    maker = maker[0:lpos]
 
         if not silent:
             if resolved:
-                print(f"Matched on '{maker}' / '{scent}' from {tlc.author} ({confidence} {tlc.id})")
+                print(f"Matched on '{maker}' / '{scent}' from {tlc.author} ({confidence}; {tlc.id})")
             elif maker and scent:
-                print(f"Resolved '{maker}' / '{scent}' ({confidence} {tlc.id} by {tlc.author})")
+                print(f"Resolved '{maker}' / '{scent}' ({confidence}; {tlc.id} by {tlc.author})")
             else:
                 print(f"OTHER: {lather} ({tlc.id} by {tlc.author})")
-    elif not silent:
-        print(f"FAILED TO MATCH LATHER IN {tlc.id} by {tlc.author}")
+    else:
+        result = makers.searchMaker(tlc.body)
+        if result:
+            confidence += 1
+            if result['first']:
+                confidence += 2
+            if not result['abbreviated']:
+                confidence += 1
+            maker = result['name']
+            scent = result['match'].group(1)
+            #lather = result['match'].group(0)
+            # duplicate for now; not ready to merge into a single branch
+            if maker and not scent:
+                single = scents.getSingleScent(maker)
+                if single:
+                    # single known scent
+                    confidence += 1
+                    scent = single
+                else:
+                    confidence -= 1
+
+            # some people make it possessive
+            result = posessive_pattern.match(scent)
+            if result and not str.isspace(maker[-1]):
+                scent = scent[result.end():]
+
+            scent = scent.strip()
+            lpos = scent.find('](')
+            if lpos > 0:
+                bpos = scent.find('[', 0, lpos)
+                if bpos > 0:
+                    scent = scent[0:bpos]
+                elif bpos == 0:
+                    scent = scent[1:lpos]
+                else:
+                    scent = scent[0:lpos]
+            
+            result = separator_pattern.match(scent)
+            if result:
+                scent = scent[result.end():]
+            
+            result = type_suffix_pattern.search(scent)
+            if result:
+                confidence += 3
+                scent = scent[0:result.start()]
+            
+            scent = scent.strip()
+
+            # now, finally
+            result = scents.matchScent(maker, scent)
+            if result:
+                confidence += 2
+                scent = result['name']
+
+            if not silent:
+                if resolved:
+                    print(f"Matched on '{maker}' / '{scent}' from {tlc.author} ({confidence}; {tlc.id})")
+                elif maker and scent:
+                    print(f"Resolved '{maker}' / '{scent}' ({confidence}; {tlc.id} by {tlc.author})")
+                else:
+                    print(f"OTHER: {lather} ({tlc.id} by {tlc.author})")
+        elif not silent:
+            print(f"FAILED TO MATCH LATHER IN {tlc.id} by {tlc.author}")
     # TODO else try primary maker patterns
     # ... do we need division between primary and abbreviated?
     # or could we try to match known scent and known maker?
 
+    full_lather = lather
+    if lm:
+        full_lather = lm.group(0)
     return {
-        'lather': lather,
+        'lather': full_lather,
         'maker': maker,
         'scent': scent,
         'known_maker': resolved,
