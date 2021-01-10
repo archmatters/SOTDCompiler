@@ -2,264 +2,307 @@
 
 import re
 
-maker_pats = {
+_apostophe = '(?:\'|&#39;|’|)'
+_ending = '\\s*(.*)'
+_any_and = '\\s*(?:&(?:amp;|)|and|\+)\\s*'
+
+_maker_pats = {
     # known soapmakers
-    re.compile('abbate y la mantia\\s*(.*)', re.IGNORECASE): 'Abbate y la Mantia',
+    'abbate y la mantia': 'Abbate y la Mantia',
 
-    re.compile('acqua di parma\\s*(.*)', re.IGNORECASE): 'Acqua di Parma',
+    'acqua di parma': 'Acqua di Parma',
 
-    re.compile('apex alchemy\\s*(?:soaps?|)\\s*(.*)', re.IGNORECASE): 'Apex Alchemy Soaps',
+    'apex alchemy\\s*(?:soaps?|)': 'Apex Alchemy Soaps',
 
-    re.compile('ariana\\s*(?:&(?:amp;|)|and|n)\\s*evans\\s*(.*)', re.IGNORECASE): 'Ariana & Evans',
+    'ariana' + _any_and + 'evans': 'Ariana & Evans',
 
-    re.compile('arko\\s*(.*)', re.IGNORECASE): 'Arko',
+    'arko': 'Arko',
 
-    re.compile('art of shaving\\s*(.*)', re.IGNORECASE): 'Art of Shaving',
+    'art of shaving': 'Art of Shaving',
 
-    re.compile('archaic alchemy\\s*(.*)', re.IGNORECASE): 'Archaic Alchemy',
+    'archaic alchemy': 'Archaic Alchemy',
 
-    re.compile('arran\\s*(.*)', re.IGNORECASE): 'Arran',
+    'arran': 'Arran',
 
-    re.compile('australian private reserve\\s*(.*)', re.IGNORECASE): 'Australian Private Reserve',
+    'australian private reserve': 'Australian Private Reserve',
 
-    re.compile('barbus\\s*(.*)', re.IGNORECASE): 'Barbus',
+    'barbus': 'Barbus',
 
-    re.compile('barrister\\s*(?:&(?:amp;|)|and|n)\\s*mann?\\s*(.*)', re.IGNORECASE): 'Barrister and Mann',
+    'barrister' + _any_and + 'mann\\s*[/x×]\\s*zingari': 'Zingari Man',
+    'barrister' + _any_and + 'mann?': 'Barrister and Mann',
 
-    re.compile('black ship\\s(?:grooming\\s*(?:co\\.?|)|)\\s*(.*)', re.IGNORECASE): 'Black Ship Grooming Co.',
+    'black ship\\s(?:grooming\\s*(?:co\\.?|)|)': 'Black Ship Grooming Co.',
 
-    re.compile('bufflehead\\s*(.*)', re.IGNORECASE): 'Bufflehead',
+    'bufflehead': 'Bufflehead',
 
-    re.compile('c\\.?\\s*o\\.?\\s*bigelow\\s*(.*)', re.IGNORECASE): 'C.O. Bigelow',
+    'c\\.?\\s*o\\.?\\s*bigelow': 'C.O. Bigelow',
 
-    re.compile('captain(?:\'|&#39;|’|)s choice\\s*(.*)', re.IGNORECASE): 'Captain\'s Choice',
+    'captain' + _apostophe + 's choice': 'Captain\'s Choice',
 
-    re.compile('castle forbes\\s*(.*)', re.IGNORECASE): 'Castle Forbes',
+    'castle forbes': 'Castle Forbes',
 
-    re.compile('catie(?:\'|&#39;|’|)s bubbles\\s*(.*)', re.IGNORECASE): 'Catie\'s Bubbles',
-    re.compile('sfws\\s*/\\s*catie(?:\'|&#39;|’|)s bubbles\\s*(.*)', re.IGNORECASE): 'Catie\'s Bubbles',
+    'catie' + _apostophe + 's bubbles': 'Catie\'s Bubbles',
+    'sfws\\s*/\\s*catie' + _apostophe + 's bubbles': 'Catie\'s Bubbles',
 
-    re.compile('cbl\\b\\s+(?:soaps?|)\\s*(.*)', re.IGNORECASE): 'CBL Soaps',
+    'cbl\\b\\s+(?:soaps?|)': 'CBL Soaps',
 
-    re.compile('cella\\s*(.*)', re.IGNORECASE): 'Cella',
+    'cella': 'Cella',
 
-    re.compile('central texas (?:soaps?|)\\s*(.*)', re.IGNORECASE): 'Central Texas Soaps',
+    'central texas (?:soaps?|)': 'Central Texas Soaps',
 
-    re.compile('oleo\\s*(?:soap|soapworks|)\\s*(.*)', re.IGNORECASE): 'Chicago Grooming Co.',
-    re.compile('chicago groom\\w+\\s*(?:company|co\\.?)\\s*(?:\(formerly[^)]+\)|)\\s*(.*)', re.IGNORECASE): 'Chicago Gromming Co.',
+    'oleo\\s*(?:soap|soapworks|)': 'Chicago Grooming Co.',
+    'chicago groom\\w+\\s*(?:company|co\\.?)\\s*(?:\(formerly[^)]+\)|)': 'Chicago Grooming Co.',
 
-    re.compile('chiseled face\\s*(.*)', re.IGNORECASE): 'Chiseled Face',
+    'chiseled face': 'Chiseled Face',
+    'zoologist(?: perfumes|)\\s*/\\s*chiseled face': 'Chiseled Face',
+    'chiseled face\\s*/\\s*zoologist(?: perfumes|)': 'Chiseled Face',
 
-    re.compile('cold river\\s*(?:soap\\s*works)\\s*(.*)', re.IGNORECASE): 'Cold River Soap Works',
+    'cold river\\s*(?:soap\\s*works)': 'Cold River Soap Works',
 
-    re.compile('(?:col(?:onel|\\.|)\\s*|)conk\\s*(.*)', re.IGNORECASE): 'Col. Conk',
+    '(?:col(?:onel|\\.|)\\s*|)conk': 'Col. Conk',
 
-    re.compile('crabtree\\s*(?:&(?:amp;|)|and|n)\\s*evelyn\\s*(.*)', re.IGNORECASE): 'Crabtree & Evelyn',
+    'crabtree' + _any_and + 'evelyn': 'Crabtree & Evelyn',
 
-    re.compile('cremo\\s*(.*)', re.IGNORECASE): 'Cremo',
+    'cremo': 'Cremo',
 
-    re.compile('d\\.?\\s*r\\.?\\s*harris\\s*(.*)', re.IGNORECASE): 'D.R. Harris',
+    'd\\.?\\s*r\\.?\\s*harris': 'D.R. Harris',
 
-    re.compile('dindi naturals\\s*(.*)', re.IGNORECASE): 'Dindi Naturals',
+    'dindi naturals': 'Dindi Naturals',
 
-    re.compile('Declaration Grooming/Chatillon Lux\\s*(.*)', re.IGNORECASE): 'Declaration Grooming',
-    re.compile('Declaration Grooming/Maggard Razors\\s*(.*)', re.IGNORECASE): 'Declaration Grooming',
-    re.compile('declaration\\s*(?:grooming|)\\s*(.*)', re.IGNORECASE): 'Declaration Grooming',
-    re.compile('Chatillon Lux/Declaration Grooming\\s*(.*)', re.IGNORECASE): 'Declaration Grooming',
+    'Declaration Grooming/Chatillon Lux': 'Declaration Grooming',
+    'Declaration Grooming/Maggard Razors': 'Declaration Grooming',
+    'declaration\\s*(?:grooming|)': 'Declaration Grooming',
+    'Chatillon Lux/Declaration Grooming': 'Declaration Grooming',
 
-    re.compile('dr.? joh?n(?:\'|&#39;|’|)s\\s*(.*)', re.IGNORECASE): 'Dr. Jon\'s',
+    'dr.? joh?n' + _apostophe + 's': 'Dr. Jon\'s',
 
-    re.compile('edwin jagg[ea]r\\s*(.*)', re.IGNORECASE): 'Edwin Jagger',
+    'edwin jagg[ea]r': 'Edwin Jagger',
 
-    re.compile('eleven\\s*(.*)', re.IGNORECASE): 'Eleven Shaving',
+    'eleven': 'Eleven Shaving',
 
-    re.compile('ethos\\s*(.*)', re.IGNORECASE): 'ETHOS',
+    'ethos': 'ETHOS',
 
-    re.compile('eufros\\s*(.*)', re.IGNORECASE): 'Eufros',
+    'eufros': 'Eufros',
 
-    re.compile('executive shaving\\s*(.*)', re.IGNORECASE): 'Executive Shaving',
+    'executive shaving': 'Executive Shaving',
 
-    re.compile('fenom[ei]no\\s*(?:shave|)\\s*(.*)', re.IGNORECASE): 'Fenomeno Shave',
+    'fenom[ei]no\\s*(?:shave|)': 'Fenomeno Shave',
 
-    re.compile('fine\\s*(?:accoutrements|)\\s*(.*)', re.IGNORECASE): 'Eleven',
+    'fine\\s*(?:accoutrements|)': 'Eleven',
 
-    re.compile('floris\\s*(?:(?:of|)\\s*london|)\\s*(.*)', re.IGNORECASE): 'Floris London',
+    'first canadian\\s*(?:shave soap\\s*(?:company|co.?|)|)': 'First Canadian Shave Soap Co.',
 
-    re.compile('fitjar\\s*(?:islands?|)\\s*(.*)', re.IGNORECASE): 'Fitjar Islands',
+    'floris\\s*(?:(?:of|)\\s*london|)': 'Floris London',
 
-    re.compile('geo\\.?\\s*f\\.?\\s*trumper\\s*(.*)', re.IGNORECASE): 'Geo. F. Trumper',
+    'fitjar\\s*(?:islands?|)': 'Fitjar Islands',
 
-    re.compile('gentlem[ae]n(?:\'|&#39;|’|)s? nod\\s*(.*)', re.IGNORECASE): 'Gentleman\'s Nod',
+    'fuzzy\\s*face(?: soaps|)': 'Fuzzyface Soaps',
 
-    re.compile('gillette\\s*(.*)', re.IGNORECASE): 'Gillette',
+    'geo\\.?\\s*f\\.?\\s*trumper': 'Geo. F. Trumper',
 
-    re.compile('(?:the|)\\s*goodfella(?:\'|&#39;|’|)s(?:\'|&#39;|’|)\\s*(?:smile|)\\s*(.*)', re.IGNORECASE): 'The Goodfellas\' Smile',
+    'gentlem[ae]n' + _apostophe + 's? nod': 'Gentleman\'s Nod',
 
-    re.compile('grooming dep\\S*\\s*(.*)', re.IGNORECASE): 'Grooming Department',
+    'gillette': 'Gillette',
 
-    re.compile('first canadian\\s*(?:shave soap\\s*(?:company|co.?|)|)\\s*(.*)', re.IGNORECASE): 'First Canadian Shave Soap Co.',
+    '(?:the|)\\s*goodfella' + _apostophe + 's' + _apostophe + '\\s*(?:smile|)': 'The Goodfellas\' Smile',
 
-    re.compile('haslinger\\s*(.*)', re.IGNORECASE): 'Haslinger',
+    'grooming dep[at]\\S*': 'Grooming Department',
 
-    re.compile('henri et victoria\\s*(.*)', re.IGNORECASE): 'Henri et Victoria',
+    'haslinger': 'Haslinger',
 
-    re.compile('henri et victoria\\s*(.*)', re.IGNORECASE): 'Henri et Victoria',
+    'henri et victoria': 'Henri et Victoria',
 
-    re.compile('heritage hill(?: shave\\s*(?:company|co\\.?)|)\\s*(.*)', re.IGNORECASE): 'Heritage Hill Shave Company',
+    'henri et victoria': 'Henri et Victoria',
 
-    re.compile('highland spring soap\\s*(?:company|co\\.?)\\s*(.*)', re.IGNORECASE): 'Highland Springs Soap Company',
-    re.compile('highland spring\\s*(.*)', re.IGNORECASE): 'Highland Springs Soap Company',
+    'heritage hill(?: shave\\s*(?:company|co\\.?)|)': 'Heritage Hill Shave Company',
 
-    re.compile('hub city\\s*(?:soap (?:company|co\\.?))\\s*(.*)', re.IGNORECASE): 'Hub City Soap Company',
+    'highland spring soap\\s*(?:company|co\\.?)': 'Highland Springs Soap Company',
+    'highland spring': 'Highland Springs Soap Company',
 
-    re.compile('imperial\\s*(?:barber (?:products|grade products?|)|)\\s*(.*)', re.IGNORECASE): 'Imperial Barber',
+    'hub city\\s*(?:soap (?:company|co\\.?))': 'Hub City Soap Company',
+
+    'imperial\\s*(?:barber (?:products|grade products?|)|)': 'Imperial Barber',
     
-    re.compile('l(?:\'|&#39;|’|)occitane\\s*(.*)', re.IGNORECASE): 'L\'Occitane',
+    'l' + _apostophe + 'occitane': 'L\'Occitane',
 
-    re.compile('la toja\\s*(.*)', re.IGNORECASE): 'La Toja',
+    'la toja': 'La Toja',
     
-    re.compile('like grandpa\\s*(.*)', re.IGNORECASE): 'Like Grandpa',
+    'like grandpa': 'Like Grandpa',
     
-    re.compile('maggard\\s*(?:razors?|)\\s*(.*)', re.IGNORECASE): 'Maggard Razors',
+    '(?:los angeles|la) shaving soap (?:company|co\\.?)': 'Los Angeles Shaving Soap Company',
+    
+    'maggard\\s*(?:razors?|)': 'Maggard Razors',
+    'maggard' + _apostophe: 'Maggard Razors',
 
-    re.compile('maol\\s*(?:grooming|)\\s*(.*)', re.IGNORECASE): 'Maol Grooming',
+    'maol\\s*(?:grooming|)': 'Maol Grooming',
 
-    re.compile('mama bear\\s*(.*)', re.IGNORECASE): 'Mama Bear',
+    'mama bear': 'Mama Bear',
 
-    re.compile('mammoth\\s*(?:soaps?|)\\s*(.*)', re.IGNORECASE): 'Mammoth Soaps',
+    'mammoth\\s*(?:soaps?|)': 'Mammoth Soaps',
 
-    re.compile('martin de candre\\s*(.*)', re.IGNORECASE): 'Martin de Candre',
+    'martin de candre': 'Martin de Candre',
 
-    re.compile('micke?y lee soap\w+\\s*(.*)', re.IGNORECASE): 'Mickey Lee Soapworks',
+    'micke?y lee soap\w+': 'Mickey Lee Soapworks',
 
-    re.compile('mike(?:\'|&#39;|’|)s natural soaps?\\s*(.*)', re.IGNORECASE): 'Mike\'s Natural Soaps',
+    'mike(?:\'|&#39;|’|)s natural soaps?': 'Mike\'s Natural Soaps',
 
-    re.compile('mitchell(?:\'|&#39;|’|)s\\s*(?:wool fat|)\\s*(.*)', re.IGNORECASE): 'Mitchell\'s Wool Fat',
+    'mitchell(?:\'|&#39;|’|)s\\s*(?:wool fat|)': 'Mitchell\'s Wool Fat',
 
-    re.compile('m[üu]hle\\s*(.*)', re.IGNORECASE): 'Mühle',
+    'm[üu]hle': 'Mühle',
 
-    re.compile('murphy\\s*(?:&(?:amp;|)|and|n)\\s*mcneil\\s*(.*)', re.IGNORECASE): 'Murphy and McNeil',
+    'murphy' + _any_and + 'mcneil': 'Murphy and McNeil',
 
-    re.compile('mystic water\\s*(?:soaps?|)\\s*(.*)', re.IGNORECASE): 'Mystic Water Soap',
+    'mystic water\\s*(?:soaps?|)': 'Mystic Water Soap',
 
-    re.compile('noble otter\\s*(.*)', re.IGNORECASE): 'Noble Otter',
+    'noble otter': 'Noble Otter',
+    'australian private reserve\\s*/\\s*noble otter': 'Noble Otter',
+    'apr\\s*/\\s*no': 'Noble Otter',
+    'no\\s*/\\s*apr': 'Noble Otter',
 
-    re.compile('obsessive soap(?:s|\\s+perfect\w+|)\\s*(.*)', re.IGNORECASE): 'Obsessive Soap Perfectionist',
-    re.compile('osp(?:\\s*soaps?|\\b)\\s*(.*)', re.IGNORECASE): 'Obsessive Soap Perfectionist',
+    'obsessive soap(?:s|\\s+perfect\w+|)': 'Obsessive Soap Perfectionist',
+    'osp(?:\\s*soaps?|\\b)': 'Obsessive Soap Perfectionist',
 
-    re.compile('old spice\\s*(.*)', re.IGNORECASE): 'Old Spice',
+    'ogalalla': 'Ogalalla',
 
-    re.compile('oz shaving\\s*(.*)', re.IGNORECASE): 'Oz Shaving',
+    'old spice': 'Old Spice',
 
-    re.compile('palmolive\\s*(.*)', re.IGNORECASE): 'Palmolive',
+    'oz shaving': 'Oz Shaving',
 
-    re.compile('panna\\s*crema\\s*(.*)', re.IGNORECASE): 'PannaCrema',
+    'palmolive': 'Palmolive',
 
-    re.compile('paragon shaving\\s*(.*)', re.IGNORECASE): 'Paragon Shaving',
+    'panna\\s*crema': 'PannaCrema',
 
-    re.compile('ph[oe]+nix\\s*(?:&(?:amp;|)|and|n)\\s*beau\\s*(.*)', re.IGNORECASE): 'Phoenix and Beau',
+    'paragon shaving': 'Paragon Shaving',
 
-    re.compile('phoenix artisan accoutrements\\s*(.*)', re.IGNORECASE): 'Phoenix Artisan Accoutrements',
+    'ph[oe]+nix' + _any_and + 'beau': 'Phoenix and Beau',
 
-    re.compile('pr[ée] de provence\\s*(.*)', re.IGNORECASE): 'Pré de Provence',
+    'phoenix artisan accoutrements': 'Phoenix Artisan Accoutrements',
 
-    re.compile('pro(?:raso|saro)\\s*(.*)', re.IGNORECASE): 'Proraso',
+    'pr[ée] de provence': 'Pré de Provence',
 
-    re.compile('pinnacle grooming\\s*(.*)', re.IGNORECASE): 'Pinnacle Grooming',
+    'pro(?:raso|saro)': 'Proraso',
 
-    re.compile('razorock\\s*(.*)', re.IGNORECASE): 'RazoRock',
+    'pinnacle grooming': 'Pinnacle Grooming',
 
-    re.compile('red house farms\\s*(.*)', re.IGNORECASE): 'Red House Farms',
-    re.compile('(?:u/|)grindermonk(?:\'|&#39;|’|)s?\\s*(.*)', re.IGNORECASE): 'Red House Farms',
+    'razorock': 'RazoRock',
 
-    re.compile('reef point\\s*(?:soaps?)\\s*(.*)', re.IGNORECASE): 'Reef Point Soaps',
+    'red house farms': 'Red House Farms',
+    '(?:u/|)grindermonk' + _apostophe + 's?': 'Red House Farms',
 
-    re.compile('saponificio\\s*varesino\\s*(.*)', re.IGNORECASE): 'Saponificio Varesino',
+    'reef point\\s*(?:soaps?)': 'Reef Point Soaps',
 
-    re.compile('seaforth!?\\s*(.*)', re.IGNORECASE): 'Seaforth!',
+    'saponificio\\s*varesino': 'Saponificio Varesino',
 
-    re.compile('shannon(?:\'|&#39;|’|)s soaps\\s*(.*)', re.IGNORECASE): 'Shannon\'s Soaps',
+    'seaforth!?': 'Seaforth!',
 
-    re.compile('s\\s*h\\s*a\\s*v\\s*e.{0,4}d\\s*a\\s*n\\s*d\\s*y\\s*(.*)', re.IGNORECASE): 'SHAVE DANDY',
+    'shannon' + _apostophe + 's soaps': 'Shannon\'s Soaps',
 
-    re.compile('siliski soaps\\s*(.*)', re.IGNORECASE): 'Siliski Soaps',
+    's\\s*h\\s*a\\s*v\\s*e.{0,4}d\\s*a\\s*n\\s*d\\s*y': 'SHAVE DANDY',
 
-    re.compile('soap commander\\s*(.*)', re.IGNORECASE): 'Soap Commander',
+    'siliski soaps': 'Siliski Soaps',
 
-    re.compile('some irish guy(?:\'|&#39;|’|)s\\s*(.*)', re.IGNORECASE): 'Some Irish Guy\'s',
+    'soap commander': 'Soap Commander',
 
-    re.compile('southern witchcrafts?\\s*(.*)', re.IGNORECASE): 'Southern Witchcrafts',
-    re.compile('Australian Private Reserve/Southern Witchcrafts\\s*(.*)', re.IGNORECASE): 'Southern Witchcrafts',
-    re.compile('southern witchcrafts\\s*/\\s*apr\\b\\s*(.*)', re.IGNORECASE): 'Southern Witchcrafts',
+    'some irish guy' + _apostophe + 's': 'Some Irish Guy\'s',
 
-    re.compile('spearhead\\s*(?:(?:shaving|soap)\\s*(?:company|co.?|)|)\\s*(.*)', re.IGNORECASE): 'Spearhead Shaving Company',
+    'southern witchcrafts?': 'Southern Witchcrafts',
+    'Australian Private Reserve/Southern Witchcrafts': 'Southern Witchcrafts',
+    'southern witchcrafts\\s*/\\s*apr\\b': 'Southern Witchcrafts',
 
-    re.compile('sp[ei]{2}c?k\\s*(.*)', re.IGNORECASE): 'Speick',
+    'spearhead\\s*(?:(?:shaving|soap)\\s*(?:company|co.?|)|)': 'Spearhead Shaving Company',
 
-    re.compile('st[ei]rl[ei]ng\s*(?:soap\s*(?:company|co\\.?|)|)(.*)', re.IGNORECASE): 'Stirling Soap Co.',
+    'sp[ei]{2}c?k': 'Speick',
 
-    re.compile('story\\s*book soap\\s*works\\s*(.*)', re.IGNORECASE): 'Storybook Soapworks',
-    re.compile('story\\s*book soap\\s*works\\s*[&/]\\s*ap\\s*r(?:eserve|\\b)(.*)', re.IGNORECASE): 'Storybook Soapworks',
+    'st[ei]rl[ei]ng\s*(?:soap\s*(?:company|co\\.?|)|)(.*)': 'Stirling Soap Co.',
 
-    re.compile('(?:the|)\\s*sudsy soapery\\s*(.*)', re.IGNORECASE): 'The Sudsy Soapery',
+    'story\\s*book soap\\s*works': 'Storybook Soapworks',
+    'story\\s*book soap\\s*works\\s*[&/]\\s*ap\\s*r(?:eserve|\\b)(.*)': 'Storybook Soapworks',
 
-    re.compile('summer break\\s*(?:soap\w+|)\\s*(.*)', re.IGNORECASE): 'Summer Break Soaps',
+    '(?:the|)\\s*sudsy soapery': 'The Sudsy Soapery',
 
-    re.compile('talbot\\s*(?:shaving|)\\s*(.*)', re.IGNORECASE): 'Talbot Shaving',
+    'summer break\\s*(?:soap\w+|)': 'Summer Break Soaps',
 
-    re.compile('tallow\\s*(?:\\+|&(?:amp;|)|and)\\s*steel\\s*(.*)', re.IGNORECASE): 'Tallow + Steel',
-    re.compile('t\\s*(?:\\+|&(?:amp;|)|and)\\s*s\\b\\s*(.*)', re.IGNORECASE): 'Tallow + Steel',
+    'talbot\\s*(?:shaving|)': 'Talbot Shaving',
 
-    re.compile('taylor of old bond st\S*\\s*(.*)', re.IGNORECASE): 'Taylor of Old Bond Street',
-    re.compile('tobs\\b\\s*(.*)', re.IGNORECASE): 'Taylor of Old Bond Street',
+    'tallow' + _any_and + 'steel': 'Tallow + Steel',
 
-    re.compile('tcheon fung sing\\s*(.*)', re.IGNORECASE): 'Tcheon Fung Sing',
+    'taylor of old bond st\S*': 'Taylor of Old Bond Street',
+    'tobs\\b': 'Taylor of Old Bond Street',
 
-    re.compile('valobra\\b\\s*(.*)', re.IGNORECASE): 'Valobra',
+    'tcheon fung sing': 'Tcheon Fung Sing',
 
-    re.compile('west coast shaving\\s*(.*)', re.IGNORECASE): 'West Coast Shaving',
+    'valobra\\b': 'Valobra',
 
-    re.compile('west of olympia\\s*(.*)', re.IGNORECASE): 'West of Olympia',
+    'viking(?: soap|)\\b': 'Viking Soap & Cosmetic',
 
-    re.compile('wholly kaw\\s*(.*)', re.IGNORECASE): 'Wholly Kaw',
+    'vito' + _apostophe + 's': 'Vitos',
 
-    re.compile('wickham\\s(?:soap co.?|)\\s*(.*)', re.IGNORECASE): 'Wickham Soap Co.',
+    'west coast shaving': 'West Coast Shaving',
 
-    re.compile('william(?:\'|&#39;|’|)s\\s(?:mug soap|)\\s*(.*)', re.IGNORECASE): 'William\'s Mug Soap',
+    'west of olympia': 'West of Olympia',
 
-    re.compile('zingari\\s*(?:mann?|)\\s*(.*)', re.IGNORECASE): 'Zingari Man',
-    re.compile('barrister\\s*(?:&(?:amp;|)|and|n)\\s*mann/zingari\\s*(.*)', re.IGNORECASE): 'Zingari Man',
-    re.compile('zingari\\s*(?:man|)\\s*/\\s*b\\s*(?:&(?:amp;|)|\\+|a)\\s*m\\s*(.*)', re.IGNORECASE): 'Zingari Man',
-    re.compile('b\\s*(?:&(?:amp;|)|\\+|a)\\s*m\\s*/\\s*zingari\\s*(?:man|)\\s*(.*)', re.IGNORECASE): 'Zingari Man',
+    'wholly kaw': 'Wholly Kaw',
+
+    'wickham(?: soap co.?|)': 'Wickham Soap Co.',
+
+    'william' + _apostophe + 's\\s(?:mug soap|)': 'William\'s Mug Soap',
+
+    'zingari\\s*(?:mann?|)': 'Zingari Man',
+    'zingari\\s*(?:man|)\\s*[/x×]\\s*b\\s*(?:&(?:amp;|)|\\+|a)\\s*m': 'Zingari Man',
+    'b\\s*(?:&(?:amp;|)|\\+|a)\\s*m\\s*[/x×]\\s*zingari\\s*(?:man|)': 'Zingari Man',
 
     # other
-    re.compile('homemade\\s+[a-z\\s\\(\\)]*?soap\\s*(.*)', re.IGNORECASE): '(homemade)',
-    re.compile('mug of many samples\\s*(.*)', re.IGNORECASE): 'Mug of many samples',
+    'homemade\\s+[a-z\\s\\(\\)]*?soap': '(homemade)',
+    'mug of many samples': 'Mug of many samples',
 
     # things that aren't really "lather," but for some reason got used anyway
-    re.compile('k[ae]rosene\\.*\\s*(.*)', re.IGNORECASE): 'kerosene',
+    'k[ae]rosene\\.*': 'kerosene',
 
     # abbreviations
-    re.compile('aos\\b\\s*(.*)', re.IGNORECASE): 'Art of Shaving',
-    re.compile('apr\\b\\s*(.*)', re.IGNORECASE): 'Australian Private Reserve',
-    re.compile('b\\s*(?:&(?:amp;|)|\\+|a)\\s*m\\s*(.*)', re.IGNORECASE): 'Barrister and Mann',
-    re.compile('dg\\b(?:/CL|)\\s*(.*)', re.IGNORECASE): 'Declaration Grooming',
-    re.compile('hssc\\s*(.*)', re.IGNORECASE): 'Highland Springs Soap Company',
-    re.compile('mls\\b\\s*(.*)', re.IGNORECASE): 'Mickey Lee Soapworks',
-    re.compile('n\\.?\\s*o\\.?\\s+(.*)', re.IGNORECASE): 'Noble Otter',
-    re.compile('paa\\b\\s*(.*)', re.IGNORECASE): 'Phoenix Artisan Accoutrements',
-    re.compile('sv\\b\\s*(.*)', re.IGNORECASE): 'Saponificio Varesino',
-    re.compile('a\\s*&\\s*e\\s*(.*)', re.IGNORECASE): 'Ariana & Evans',
-    re.compile('sw\\b\\s*(.*)', re.IGNORECASE): 'Southern Witchcrafts',
-    re.compile('sbsw\\b\\s*(.*)', re.IGNORECASE): 'Storybook Soapworks',
-    re.compile('sbs\\b\\s*(.*)', re.IGNORECASE): 'Summer Break Soaps',
-    re.compile('tfs\\b\\s*(.*)', re.IGNORECASE): 'Tcheon Fung Sing',
-    re.compile('wcs\\b\\s*(.*)', re.IGNORECASE): 'West Coast Shaving',
-    re.compile('wk\\b\\s*(.*)', re.IGNORECASE): 'Wholly Kaw',
+    'aos\\b': 'Art of Shaving',
+    'apr\\b': 'Australian Private Reserve',
+    'b\\s*(?:&(?:amp;|)|\\+|a)\\s*m\\b': 'Barrister and Mann',
+    'dg\\b(?:/CL|)': 'Declaration Grooming',
+    'hssc': 'Highland Springs Soap Company',
+    'lassco': 'Los Angeles Shaving Soap Company',
+    'mls\\b': 'Mickey Lee Soapworks',
+    'n\\.?\\s*o\\.?\\s+(.*)': 'Noble Otter',
+    'paa\\b': 'Phoenix Artisan Accoutrements',
+    'sv\\b': 'Saponificio Varesino',
+    'a' + _any_and + 'e': 'Ariana & Evans',
+    'sw\\b': 'Southern Witchcrafts',
+    'sbsw\\b': 'Storybook Soapworks',
+    'sbs\\b': 'Summer Break Soaps',
+    't' + _any_and + 's\\b': 'Tallow + Steel',
+    'tfs\\b': 'Tcheon Fung Sing',
+    'wcs\\b': 'West Coast Shaving',
+    'wk\\b': 'Wholly Kaw',
 
     # other random patterns to try
     # someone once misabbreviated DG as DA
     # TODO this might be better done from scent-first matching
-    re.compile('da\\b\\s*(.*)', re.IGNORECASE): 'Declaration Grooming',
+    'da\\b': 'Declaration Grooming',
 }
 
+_compiled_pats = None
+
+def _compile():
+    global _compiled_pats
+    if _compiled_pats is None:
+        _compiled_pats = { }
+        for pattern in _maker_pats:
+            _compiled_pats[re.compile(pattern + _ending, re.IGNORECASE)] = _maker_pats[pattern]
+
+
+def matchMaker( str ):
+    """ When a maker is successfully matched, a dict is returned with these elements:
+            'match': the result object from re.match()
+            'name': the standard maker name
+        Otherwise, None is returned.
+    """
+    _compile()
+    for pattern in _compiled_pats:
+        result = pattern.match(str)
+        if result:
+            return { 'match': result, 'name': _compiled_pats[pattern] }
+    return None

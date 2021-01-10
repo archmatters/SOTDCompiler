@@ -1,1 +1,5 @@
 praw.ini
+__pycache__
+postdata
+*.csv
+

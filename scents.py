@@ -2,16 +2,21 @@
 
 import re
 
-scent_pats = {
+_apostophe = '(?:\'|&#39;|’|)'
+_any_and = '\\s*(?:&(?:amp;|)|and|\+)\\s*'
+
+_scent_pats = {
     'Abbate y la Mantia': { },
 
     'Acqua di Parma': { },
 
     'Apex Alchemy Soaps': { },
 
+    'Archaic Alchemy': { },
+
     'Ariana & Evans': { },
 
-    'Arko': { re.compile(''): 'Arko' },
+    'Arko': { '': 'Arko' },
 
     'Art of Shaving': { },
 
@@ -21,7 +26,16 @@ scent_pats = {
 
     'Barbus': { },
 
-    'Barrister and Mann': { },
+    'Barrister and Mann': {
+        'seville': 'Seville',
+        'eigengrau': 'Eigengrau',
+        '[\\w\\s]*grande? chypre.*': 'Le Grand Chypre',
+        'dickens,?\\s+revisited': 'Dickens, Revisited',
+        'oh?' + _apostophe + ',?\\s*delight': 'O, Delight!',
+        'brew ha': 'Brew Ha-Ha',
+        'hallow': 'Hallows',
+        'paganini': 'Paganini\'s Violin'
+     },
     
     'Black Ship Grooming Co.': { },
 
@@ -37,7 +51,7 @@ scent_pats = {
 
     'CBL Soaps': { },
 
-    'Cella': { re.compile(''): 'Cella' },
+    'Cella': { '': 'Cella' },
 
     'Central Texas Soaps': { },
 
@@ -55,7 +69,23 @@ scent_pats = {
 
     'D.R. Harris': { },
 
-    'Declaration Grooming': { },
+    'Declaration Grooming': {
+        'sellout': 'Sellout',
+        'tribute': 'Tribute',
+        'opulence': 'Opulence',
+        'cuir et \S+pices': 'Cuir et Épices',
+        'cygnus x': 'Cygnus X-1',
+        'hindsight': 'Hindsight',
+        'gratiot league': 'Gratiot League Square',
+        'original': 'Original',
+        'trismegistus': 'Trismegistus',
+        'after the rain': 'After the Rain',
+        'yrp\\b': 'Yuzu/Rose/Patchouli',
+        'y/r/p\\b': 'Yuzu/Rose/Patchouli',
+        'moti\\b': 'Massacre of the Innocents',
+     },
+
+    'Dindi Naturals': { '': 'lemon myrtle, macadamia + white cypress' },
 
     'Dr. Jon\'s': { },
 
@@ -64,6 +94,8 @@ scent_pats = {
     'Eleven Shaving': { },
 
     'ETHOS': { },
+
+    'Executive Shaving': { },
 
     'Eufros': { },
 
@@ -99,7 +131,7 @@ scent_pats = {
     
     'L\'Occitane': { },
 
-    'La Toja': { re.compile(''): 'La Toja' },
+    'La Toja': { '': 'La Toja' },
 
     'Like Grandpa': { },
     
@@ -117,7 +149,7 @@ scent_pats = {
 
     'Mike\'s Natural Soaps': { },
 
-    'Mitchell\'s Wool Fat': { re.compile(''): 'Mitchell\'s Wool Fat' },
+    'Mitchell\'s Wool Fat': { '': 'Mitchell\'s Wool Fat' },
 
     'Murphy and McNeil': { },
 
@@ -171,11 +203,48 @@ scent_pats = {
 
     'Taylor of Old Bond Street': { },
 
+    'Vitos': { },
+
     'Wholly Kaw': { },
 
     'Wickham Soap Co.': { },
 
-    'William\'s Mug Soap': { re.compile(''): 'William\'s Mug Soap' },
+    'William\'s Mug Soap': { '': 'William\'s Mug Soap' },
 
-    'Zingari Man': { },
+    'Zingari Man': {
+        'nocturne': 'Nocturne'
+     },
 }
+
+_compiled_pats = None
+
+def _compile( name ):
+    global _compiled_pats
+    if _compiled_pats is None:
+        _compiled_pats = { }
+    if name in _compiled_pats:
+        return True
+    if name in _scent_pats:
+        map = _scent_pats[name]
+        comp = { }
+        for pattern in map:
+            comp[re.compile(pattern, re.IGNORECASE)] = map[pattern]
+        _compiled_pats[name] = comp
+        return True
+    return False
+
+def matchScent( maker, scent ):
+    """ Attempts to match a scent name.  If successful, a dict is returned with the
+        following elements:
+            'result': the result object from re.match()
+            'name': the standard scent name
+        Otherwise None is returned.
+    """
+    if not _compile(maker):
+        return None
+    for pattern in _compiled_pats[maker]:
+        result = pattern.match(scent)
+        if result:
+            return { 'result': result, 'name': _compiled_pats[maker][pattern] }
+    return None
+

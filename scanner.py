@@ -135,7 +135,7 @@ def scanBody( tlc, silent = False ):
     maker = ''
     scent = ''
     resolved = False
-    confidence_max = 8
+    confidence_max = 10
     confidence = 0
 
     # TODO remove markdown but NOT links
@@ -144,17 +144,12 @@ def scanBody( tlc, silent = False ):
     if lm:
         lather = lm.group(1)
         confidence += 2
-        for pattern in makers.maker_pats:
-            result = pattern.match(lather)
-            if result:
-                maker = makers.maker_pats[pattern]
-                scent = result.group(1)
-                resolved = True
-                confidence += 3
-                break
-        scent_pats = None
-        if maker and maker in scents.scent_pats:
-            scent_pats = scents.scent_pats[maker]
+        result = makers.matchMaker(lather)
+        if result:
+            maker = result['name']
+            scent = result['match'].group(1)
+            resolved = True
+            confidence += 3
 
         # fallback case
         if not scent:
@@ -198,11 +193,17 @@ def scanBody( tlc, silent = False ):
         
         scent = scent.strip()
 
+        # now, finally
+        result = scents.matchScent(maker, scent)
+        if result:
+            confidence += 2
+            scent = result['name']
+
         if not silent:
             if resolved:
-                print(f"Matched on '{maker}' / '{scent}' from {tlc.author} ({tlc.id})")
+                print(f"Matched on '{maker}' / '{scent}' from {tlc.author} ({confidence} {tlc.id})")
             elif maker and scent:
-                print(f"Resolved '{maker}' / '{scent}' ({tlc.id} by {tlc.author})")
+                print(f"Resolved '{maker}' / '{scent}' ({confidence} {tlc.id} by {tlc.author})")
             else:
                 print(f"OTHER: {lather} ({tlc.id} by {tlc.author})")
     elif not silent:
