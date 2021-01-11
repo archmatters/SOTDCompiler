@@ -9,7 +9,10 @@ _scent_pats = {
     'Abbate y la Mantia': {
         'krokos': 'Krokos',
         'crumiro': 'Crumiro',
-        'matteo 9,11': 'Matteo 9,11',
+        'matteo': 'Matteo 9,11',
+        'garibaldi': 'Garibaldi',
+        'monet': 'Monet',
+        'buttero': 'Buttero'
      },
 
     'Acqua di Parma': { },
@@ -48,7 +51,10 @@ _scent_pats = {
         'foug[èeé]re angel': 'Fougère Angelique'
      },
     
-    'Black Ship Grooming Co.': { },
+    'Black Ship Grooming Co.': {
+        'captain' + _apostophe + 's choice': 'Captain\'s Choice',
+        'calypso' + _apostophe + 's curse': 'Calypso\'s Curse',
+     },
 
     'Bufflehead': { },
 
@@ -63,10 +69,10 @@ _scent_pats = {
     'CBL Soaps': { },
 
     'Cella': {
-        'soap': 'Cream soap',
+        '[\w ]+aloe vera': 'Aloe Vera cream',
         '(?:cella |)crema sapone': 'Cream soap',
         '(?:cella |)crema d[ae] barba': 'Cream',
-        'aloe vera cream': 'Aloe Vera cream',
+        'soap': 'Cream soap',
     },
 
     'Central Texas Soaps': { },
@@ -99,6 +105,10 @@ _scent_pats = {
         'yrp\\b': 'Yuzu/Rose/Patchouli',
         'y/r/p\\b': 'Yuzu/Rose/Patchouli',
         'moti\\b': 'Massacre of the Innocents',
+        'son et lumiere': 'Son et Lumiere',
+        'b cubed?': 'B Cubed',
+        'b3\\b': 'B Cubed',
+        'blackberry blossom bay': 'B Cubed',
      },
 
     'Dindi Naturals': { '': 'lemon myrtle, macadamia + white cypress' },
@@ -171,6 +181,14 @@ _scent_pats = {
 
     'Noble Otter': { },
 
+    'Ogallala Bay Rum': {
+        'sage,?' + _any_and + 'cedar': 'Bay Rum, Sage & Cedar',
+        'limes,?' + _any_and + 'peppercorn': 'Bay Rum, Limes & Peppercorn',
+        _any_and + 'sweet orange': 'Bay Rum & Sweet Orange',
+        _any_and + 'vanilla': 'Bay Rum & Vanilla',
+        '\\s*$': 'Bay Rum'
+    },
+
     'Old Spice': { },
 
     'Oz Shaving': { },
@@ -190,7 +208,17 @@ _scent_pats = {
 
     'Pinnacle Grooming': { },
 
-    'RazoRock': { },
+    'RazoRock': {
+        'blue\\s*$': 'Blue Barbershop',
+        'what the puck[\W]*\\s+blue': 'Blue Barbershop',
+     },
+
+    'Red House Farms': { 
+        'cedar[^\w]+lime': 'Cedar-Lime',
+        'barbershop': 'Barbershop 1920',
+        _apostophe + 'tis the saison': '\'Tis the Saison',
+        'pan de muerto': 'Pan de Muerto',
+    },
 
     'Reef Point Soaps': { },
 
@@ -226,10 +254,20 @@ _scent_pats = {
         'verde': 'Green',
         'rosso': 'Red',
         'Extra Super': 'Red',
-        'eucalyptus': 'Lanolin & Eucalyptus'
+        '(?super |)red': 'Red',
+        'lanolin' + _any_and + 'eucalyptus': 'Lanolin & Eucalyptus'
      },
 
-    'Wholly Kaw': { },
+    'Wholly Kaw': {
+        'eroe': 'Eroe',
+        'foug[èeé]re mania': 'Fougère Mania',
+        '(?:la |)foug[èeé]re parfaite': 'La Fougère Parfaite',
+        'foug[èeé]re bouquet': 'Fougère Bouquet',
+        'yuzu/rose/patchouli': 'Yuzu/Rose/Patchouli',
+        'y/r/p': 'Yuzu/Rose/Patchouli',
+        'pasha' + _apostophe + 's pride': 'Pasha\'s Pride',
+        'denariou?s': 'Denarius',
+     },
 
     'Wickham Soap Co.': { },
 
