@@ -14,7 +14,7 @@ from pathlib import Path
 #brush_pattern = re.compile('\\bbrush\\s*\\W*\\s*(\\S.*)', re.IGNORECASE)
 #lather_pattern = re.compile('\n[^a-z]*(?:lather|shaving\\s+soap|soap|cream|gel\\b)[\\s\\W]*(\\S.*)', re.IGNORECASE)
 lather_pattern = re.compile('(?:^|\n)[^a-z]*(?:lather|shaving\\s+(?:soap|cream)|soap|cream|gel\\b)(?:\\s*[/&]\\s*(?:splash|balm)(?:\\s*[/&]\\s*WH|)|)[^a-z0-9]*(\\S.*)', re.IGNORECASE)
-type_suffix_pattern = re.compile('(?: - (?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
+type_suffix_pattern = re.compile('(?: - (?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream|(?:soap|) sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 separator_pattern = re.compile('\\s*(?:-+|:|,|\|)\\s*')
 posessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
 
@@ -111,10 +111,13 @@ def scanComment( tlc, post_date, dataFile ):
     if tlc.author:
         author_name = tlc.author.name
 
+    trim_lather = details['lather']
+    if trim_lather is not None:
+        trim_lather = trim_lather.strip()
     data = [ post_date.strftime('%Y-%m-%d'),
             datetime.datetime.fromtimestamp(tlc.created_utc).strftime('%H:%M:%S'),
             author_name, details['maker'], details['scent'], str(details['confidence']),
-            details['lather'], 'https://old.reddit.com' + tlc.permalink ]
+            trim_lather, 'https://old.reddit.com' + tlc.permalink ]
     dataFile.write('"')
     for i in range(len(data)):
         if i > 0:
@@ -243,6 +246,7 @@ def scanBody( tlc, silent = False ):
                     confidence += 1
                     scent = single
                 else:
+                    # todo if not result['first'], look before maker
                     confidence -= 1
 
             # some people make it possessive

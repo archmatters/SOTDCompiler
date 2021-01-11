@@ -12,7 +12,7 @@ _maker_pats = {
 
     'acqua di parma': 'Acqua di Parma',
 
-    'apex alchemy\\s*(?:soaps?|)': 'Apex Alchemy Soaps',
+    'apex alchemy\\s*(?:soaps?|shaving|)': 'Apex Alchemy Soaps',
 
     'ariana' + _any_and + 'evans\\s*/?\\s*the club': 'Ariana & Evans',
     'ariana' + _any_and + 'evans': 'Ariana & Evans',
@@ -34,6 +34,7 @@ _maker_pats = {
 
     'barrister' + _any_and + 'mann\\s*[/x×]\\s*zingari': 'Zingari Man',
     'barrister' + _any_and + 'mann?': 'Barrister and Mann',
+    'barrister' + _apostophe + 's (?=reserve)': 'Barrister and Mann',
 
     'black ship\\s(?:grooming\\s*(?:co\\.?|)|)': 'Black Ship Grooming Co.',
 
@@ -62,6 +63,8 @@ _maker_pats = {
     'chiseled face': 'Chiseled Face',
     'zoologist(?: perfumes|)\\s*/\\s*chiseled face': 'Chiseled Face',
     'chiseled face\\s*/\\s*zoologist(?: perfumes|)': 'Chiseled Face',
+
+    'clubman pinaud': 'Clubman Pinaud',
 
     'cold river\\s*(?:soap\\s*works)': 'Cold River Soap Works',
 
@@ -95,6 +98,8 @@ _maker_pats = {
     'ethos': 'ETHOS',
 
     'eufros': 'Eufros',
+
+    'extro(?:\\b| cosmesi)': 'Extro Cosmesi',
 
     'executive shaving': 'Executive Shaving',
 
@@ -181,7 +186,8 @@ _maker_pats = {
     'obsessive soap(?:s|\\s+perfect\w+|)': 'Obsessive Soap Perfectionist',
     'osp(?:\\s*soaps?|\\b)': 'Obsessive Soap Perfectionist',
 
-    'ogalalla': 'Ogalalla',
+    'ogalalla(?: bay rum|)': 'Ogallala Bay Rum',
+    'ogallala(?: bay rum|)': 'Ogallala Bay Rum',
 
     'old spice': 'Old Spice',
 
@@ -198,6 +204,7 @@ _maker_pats = {
     'pr[éeè] de provence': 'Pré de Provence',
 
     'pro(?:raso|saro)': 'Proraso',
+    'poraso': 'Proraso',
 
     'pinnacle grooming': 'Pinnacle Grooming',
 
@@ -223,8 +230,8 @@ _maker_pats = {
 
     'some irish guy' + _apostophe + 's': 'Some Irish Guy\'s',
 
+    'southern witchcrafts\\s*/\\s*ap(?: reserve|r\\b)': 'Southern Witchcrafts',
     'southern witchcrafts?': 'Southern Witchcrafts',
-    'southern witchcrafts\\s*/\\s*apr\\b': 'Southern Witchcrafts',
 
     'spearhead\\s*(?:(?:shaving|soap)' + _opt_company + '|)': 'Spearhead Shaving Company',
 
@@ -266,6 +273,8 @@ _maker_pats = {
 
     'west of olympia': 'West of Olympia',
 
+    'chatillon lux\\s*/\\s*wholly kaw': 'Wholly Kaw',
+    'wholly kaw\\s*/\\s*chatillon lux': 'Wholly Kaw',
     'wholly kaw': 'Wholly Kaw',
 
     'wickham(?: soap co.?|)': 'Wickham Soap Co.',
@@ -312,11 +321,9 @@ _maker_pats = {
     'a' + _any_and + 'e': 'Ariana & Evans',
     'sw\\b': 'Southern Witchcrafts',
     'sbsw\\b': 'Storybook Soapworks',
-    'sbs\\b': 'Summer Break Soaps',
     't' + _any_and + 's\\b': 'Tallow + Steel',
     'tfs\\b': 'Tcheon Fung Sing',
     'ttffc\\b': 'Through the Fire Fine Craft',
-    'wcs\\b': 'West Coast Shaving',
     'wk\\b': 'Wholly Kaw',
     # hardware vendors
     'aos\\b': 'Art of Shaving',
@@ -324,6 +331,9 @@ _maker_pats = {
     'fine\\b': 'Fine Accoutrements',
     'n\\.?\\s*o\\.?\\s+(.*)': 'Noble Otter',
     'paa\\b': 'Phoenix Artisan Accoutrements',
+    'rr': 'RazoRock',
+    'sbs\\b': 'Summer Break Soaps',
+    'wcs\\b': 'West Coast Shaving',
     'wwsc\\b': 'Wild West Shaving Co.',
 
     # other random patterns to try
@@ -376,6 +386,8 @@ def searchMaker( text ):
     # this might also be a problem with other two or three letter abbreviations
     _compile()
     best_match = None
+    best_pos = len(text)
+    best_begins_line = False
     for pattern in _compiled_pats:
         result = pattern.search(text)
         if result:
@@ -391,14 +403,10 @@ def searchMaker( text ):
                         break
                 if not_word:
                     begin_line = True
-            if begin_line:
-                return {
-                    'match': result,
-                    'name': _compiled_pats[pattern],
-                    'first': True,
-                    'abbreviated': False
-                }
-            best_match = result
+            if (begin_line and not best_begins_line) or (begin_line == best_begins_line and result.start() < best_pos):
+                best_match = result
+                best_pos = result.start()
+                best_begins_line = begin_line
     if best_match:
         return {
             'match': best_match,
