@@ -104,6 +104,9 @@ def getThreadComments( post, post_date ):
 
 def scanComment( tlc, post_date, dataFile ):
     """ Scans the comment body and writes to the CSV output file (dataFile).
+            tlc: the Reddit Comment object
+            post_date: the datetime.date object for the post date (not necessarily the comment posted time)
+            dateFile: the CSV output file (result of open())
     """
     details = scanBody(tlc)
 
@@ -115,9 +118,9 @@ def scanComment( tlc, post_date, dataFile ):
     if trim_lather is not None:
         trim_lather = trim_lather.strip()
     data = [ post_date.strftime('%Y-%m-%d'),
-            datetime.datetime.fromtimestamp(tlc.created_utc).strftime('%H:%M:%S'),
+            datetime.datetime.fromtimestamp(tlc.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
             author_name, details['maker'], details['scent'], str(details['confidence']),
-            trim_lather, 'https://old.reddit.com' + tlc.permalink ]
+            trim_lather, details['plaintext'], 'https://old.reddit.com' + tlc.permalink ]
     dataFile.write('"')
     for i in range(len(data)):
         if i > 0:
@@ -126,6 +129,9 @@ def scanComment( tlc, post_date, dataFile ):
             dataFile.write(data[i].replace('"','""'))
     dataFile.write("\"\n")
 
+ppat = re.compile('<\\s*p\\s*/?>', re.IGNORECASE)
+tagpat = re.compile('<[^>]*>')
+mnlpat = re.compile("\n\n+")
 
 def scanBody( tlc, silent = False ):
     """ Returns a dict with the following properties:
@@ -134,7 +140,6 @@ def scanBody( tlc, silent = False ):
           scent: scent name, if found
           known_maker: if the maker is known to makers.maker_pats
     """
-
     lather = ''
     maker = ''
     scent = ''
@@ -303,7 +308,8 @@ def scanBody( tlc, silent = False ):
         'maker': maker,
         'scent': scent,
         'known_maker': resolved,
-        'confidence': int(confidence * 100 / confidence_max)
+        'confidence': int(confidence * 100 / confidence_max),
+        'plaintext': mnlpat.sub("\n", re.sub("^\n+", '', tagpat.sub('', ppat.sub("\n", tlc.body_html))))
     }
 
 
@@ -319,6 +325,7 @@ def saveCommentData( post, cmtFilename ):
             map = {
                 'author': author_name,
                 'body': tlc.body,
+                'body_html': tlc.body_html,
                 'created_utc': tlc.created_utc,
                 'id': tlc.id,
                 'link_id': tlc.link_id,
