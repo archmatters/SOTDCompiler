@@ -10,13 +10,15 @@ import re
 
 from pathlib import Path
 
-#pre_pattern = re.compile('\\bpre\s*(?:shave|)\\s*\\W*\\s*(\\S.*)', re.IGNORECASE)
-#brush_pattern = re.compile('\\bbrush\\s*\\W*\\s*(\\S.*)', re.IGNORECASE)
-#lather_pattern = re.compile('\n[^a-z]*(?:lather|shaving\\s+soap|soap|cream|gel\\b)[\\s\\W]*(\\S.*)', re.IGNORECASE)
-lather_pattern = re.compile('(?:^|\n)[^a-z]*(?:lather|shaving\\s+(?:soap|cream)|soap|cream|gel\\b)(?:\\s*[/&]\\s*(?:splash|balm)(?:\\s*[/&]\\s*WH|)|)[^a-z0-9]*(\\S.*)', re.IGNORECASE)
+lather_pattern = re.compile('''(?:^|[\n])[^a-z]*
+        (?:lather|shaving\\s+(?:soap|cream)|soap/cream|soap|cream\\b)
+        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|)
+        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 type_suffix_pattern = re.compile('(?: - (?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream|(?:soap|) sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
-separator_pattern = re.compile('\\s*(?:-+|:|,|\|)\\s*')
+# applied to markdown, hence the backslash
+separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\|)\\s*')
 posessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
+by_pattern = re.compile('(.*) by\\s*$', re.IGNORECASE)
 
 sotd_pattern = re.compile('sotd', re.IGNORECASE)
 ymd_pattern = re.compile('(\\d{4})-(\\d\\d)-(\\d\\d)', re.IGNORECASE)
@@ -102,6 +104,16 @@ def getThreadComments( post, post_date ):
     
     return post.comments
 
+
+def removeMarkdown( text ):
+    """ Necessarily not correct, as this does not operate on the full body.
+    """
+    # blind assumption
+    text = text.replace('**', '').replace('__', '')
+    
+    return text
+
+
 def scanComment( tlc, post_date, dataFile ):
     """ Scans the comment body and writes to the CSV output file (dataFile).
             tlc: the Reddit Comment object
@@ -174,17 +186,60 @@ def scanBody( tlc, silent = False ):
                     maker = lather[0:lpos]
                     scent = lather[lpos + 3:]
                     confidence += 1
-        elif not scent:
+
+        if maker:
+            # some people make it possessive
+            result = posessive_pattern.match(scent)
+            if result and not str.isspace(maker[-1]):
+                scent = scent[result.end():]
+        else:
+            result = makers.searchMaker(lather)
+            if result:
+                maker = result['name']
+                scent = lather[0:result['match'].start()]
+                byes = by_pattern.match(scent)
+                if byes:
+                    scent = byes.group(1)
+                if scent:
+                    lpos = len(scent)
+                    while not str.isalnum(scent[lpos - 1]):
+                        lpos -= 1
+                    if lpos < len(scent) and separator_pattern.match(scent, lpos):
+                        scent = scent[0:lpos]
+            else:
+                result = makers.searchMaker(tlc.body)
+                if result:
+                    #lather = result['match'].group(0)
+                    maker = result['name']
+                    scent = result['match'].group(1)
+                    confidence += 1
+                    if result['first']:
+                        confidence += 2
+                    else:
+                        scent = tlc.body[lm.end() - len(lather):result['match'].start()]
+            if result and not result['abbreviated']:
+                confidence += 1
+            # duplicate for now; not ready to merge into a single branch
+            if maker and not scent:
+                single = scents.getSingleScent(maker)
+                if single:
+                    # single known scent
+                    confidence += 1
+                    scent = single
+                else:
+                    # TODO if not result['first'], look before maker
+                    confidence -= 1
+
+        if not maker:
             lpos = lather.find(' - ')
             if lpos > 1:
                 maker = lather[0:lpos]
                 scent = lather[lpos + 3:]
-
-        # some people make it possessive
-        result = posessive_pattern.match(scent)
-        if result and not str.isspace(maker[-1]):
-            scent = scent[result.end():]
-
+            if makers.matchMaker(scent) and not makers.matchMaker(maker):
+                swap = maker
+                maker = scent
+                scent = swap
+        
         scent = scent.strip()
         lpos = scent.find('](')
         if lpos > 0:
@@ -213,7 +268,11 @@ def scanBody( tlc, silent = False ):
             if result:
                 confidence += 2
                 scent = result['name']
+            else:
+                scent = removeMarkdown(scent.strip()).title()
         else:
+            # TODO shouldn't this be moved up?
+            # why was it moved here?
             maker = lather.strip()
             lpos = maker.find('](')
             if lpos > 0:
@@ -224,6 +283,7 @@ def scanBody( tlc, silent = False ):
                     maker = maker[1:lpos]
                 else:
                     maker = maker[0:lpos]
+            scent = removeMarkdown(scent.strip())
 
         if not silent:
             if resolved:
@@ -233,16 +293,17 @@ def scanBody( tlc, silent = False ):
             else:
                 print(f"OTHER: {lather} ({tlc.id} by {tlc.author})")
     else:
+        # duplicate of not maker above
         result = makers.searchMaker(tlc.body)
         if result:
+            #lather = result['match'].group(0)
+            maker = result['name']
+            scent = result['match'].group(1)
             confidence += 1
             if result['first']:
                 confidence += 2
             if not result['abbreviated']:
                 confidence += 1
-            maker = result['name']
-            scent = result['match'].group(1)
-            #lather = result['match'].group(0)
             # duplicate for now; not ready to merge into a single branch
             if maker and not scent:
                 single = scents.getSingleScent(maker)
@@ -251,8 +312,11 @@ def scanBody( tlc, silent = False ):
                     confidence += 1
                     scent = single
                 else:
-                    # todo if not result['first'], look before maker
+                    # TODO if not result['first'], look before maker
                     confidence -= 1
+                    if not result['first']:
+                        nlpos = tlc.body.rfind("\n", 0, result['match'].start())
+                        scent = tlc.body[nlpos + 1:result['match'].start()]
 
             # some people make it possessive
             result = posessive_pattern.match(scent)
@@ -286,6 +350,8 @@ def scanBody( tlc, silent = False ):
             if result:
                 confidence += 2
                 scent = result['name']
+            else:
+                scent = removeMarkdown(scent.strip()).title()
 
             if not silent:
                 if resolved:
@@ -339,3 +405,31 @@ def saveCommentData( post, cmtFilename ):
                 cmtFile.write(",\n")
             cmtFile.write(json.dumps(map))
         cmtFile.write("\n]}")
+
+
+not_cap_pattern = re.compile('(?:a|the|and|in|of|on|for|from|at|to|as|so|into|s|y|la|le|l|n)$', re.IGNORECASE)
+
+#TODO recognize space different from apostrophe
+# do not cap after '
+# TODO roman numerals??
+def titleCase( text ):
+    tctext = ''
+    pos = 0
+    inword = len(text) > 0 and str.isalpha(text[0])
+    # recognize ALL CAPS STRING AS DISTINCT from distinct WORDS in all caps
+    allcaps = str.isupper(text)
+    for i in range(1, len(text) + 1):
+        if i == len(text):
+            nextword = not inword
+        else:
+            nextword = str.isalpha(text[i])
+        if nextword != inword:
+            if inword and (pos == 0 or not not_cap_pattern.match(text, pos, i)
+                    ) and (allcaps or not text[pos:i].isupper()):
+                tctext += text[pos].upper() + text[pos + 1:i].lower()
+            else:
+                tctext += text[pos:i].lower()
+            pos = i
+            inword = nextword
+    return tctext
+
