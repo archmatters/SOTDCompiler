@@ -34,27 +34,51 @@ _scent_pats = {
 
     'Australian Private Reserve': { },
 
-    'Barbus': { },
+    'Barbasol': {
+        '\\s$': 'Cream',
+        'soothing aloe\\b': 'Soothing Aloe',
+     },
+
+    'Barbus': {
+        '\\s*$': 'Classic',
+        'active': 'Active',
+     },
 
     'Barrister and Mann': {
         'seville': 'Seville',
         'eigengrau': 'Eigengrau',
         '[\\w\\s]*grande? chypre.*': 'Le Grand Chypre',
-        'dickens,?\\s+revisited': 'Dickens, Revisited',
+        'dickens,?\\s+revis': 'Dickens, Revisited',
         'oh?' + _apostophe + ',?\\s*delight': 'O, Delight!',
-        'brew ha': 'Brew Ha-Ha',
+        'brew?[\\- ]ha': 'Brew Ha-Ha',
         'hallow': 'Hallows',
         'paganini': 'Paganini\'s Violin',
-        'leviathan': 'Leviathan',
+        'levian?than': 'Leviathan',
         'beaudelaire': 'Beaudelaire',
         'foug[èeé]re gothi': 'Fougère Gothique',
-        'foug[èeé]re angel': 'Fougère Angelique'
+        'foug[èeé]re angel': 'Fougère Angelique',
+        'behold the whatsis': 'Behold the Whatsis!',
+        'dfs (?:2017|exclusive)': 'DFS 2017 LE',
+        'waves$': 'Reserve Waves',
+        'spice$': 'Reserve Spice',
+        'fern$': 'Reserve Fern',
+        'lavender$': 'Reserve Lavender',
+        'cool$': 'Reserve Cool',
+        'classic$': 'Reserve Classic',
+        'le grand (?:cyphre|chypre)': 'Le Grand Chypre',
      },
+
+    'BAUME.BE': {
+        '(?:shaving |)soap': 'Soap',
+        '(?:shaving |)cream': 'Cream'
+    },
     
     'Black Ship Grooming Co.': {
         'captain' + _apostophe + 's choice': 'Captain\'s Choice',
         'calypso' + _apostophe + 's curse': 'Calypso\'s Curse',
      },
+
+    'The Bluebeards Revenge': { '': 'Shaving Cream' },
 
     'Bufflehead': { },
 
@@ -75,13 +99,26 @@ _scent_pats = {
         'soap': 'Cream soap',
     },
 
-    'Central Texas Soaps': { },
+    'Central Texas Soaps': {
+        'm[er]\\.? pepper': 'Mr. Pepper',
+        'saw': 'The Saw',
+        'citrus burst': 'Citrus Burst',
+        'babershop': 'Grandpa\'s Barbershop',
+     },
 
-    'Chicago Grooming Co.': { },
+    'Chicago Grooming Co.': {
+        'montrose beach': 'Montrose Beach',
+        'ex?cursion': 'Excursion',
+     },
 
-    'Chiseled Face': { },
+    'Chiseled Face': {
+        'gtb': 'Ghost Town Barber',
+        'ghosttown barber': 'Ghost Town Barber',
+     },
 
     'Cold River Soap Works': { },
+
+    'Colgate': { '': 'Mug soap' },
 
     'Col. Conk': { },
 
@@ -91,11 +128,17 @@ _scent_pats = {
 
     'D.R. Harris': { },
 
+    'Dalan': {
+        'energetic': 'Energetic',
+        'cool': 'Cool',
+        'sensitive': 'Sensitive'
+    },
+
     'Declaration Grooming': {
         'sellout': 'Sellout',
         'tribute': 'Tribute',
         'opulence': 'Opulence',
-        'cuir et \S+pices': 'Cuir et Épices',
+        'cuir et [èeé]pices': 'Cuir et Épices',
         'cygnus x': 'Cygnus X-1',
         'hindsight': 'Hindsight',
         'gratiot league': 'Gratiot League Square',
@@ -105,10 +148,10 @@ _scent_pats = {
         'yrp\\b': 'Yuzu/Rose/Patchouli',
         'y/r/p\\b': 'Yuzu/Rose/Patchouli',
         'moti\\b': 'Massacre of the Innocents',
+        'massacre$': 'Massacre of the Innocents',
         'son et lumiere': 'Son et Lumiere',
-        'b cubed?': 'B Cubed',
-        'b3\\b': 'B Cubed',
-        'blackberry blossom bay': 'B Cubed',
+        'b[\\- ?]cubed?': 'Blackberry Blossom Bay',
+        'b3\\b': 'Blackberry Blossom Bay',
      },
 
     'Dindi Naturals': { '': 'lemon myrtle, macadamia + white cypress' },
@@ -129,13 +172,31 @@ _scent_pats = {
 
     'Eleven': { },
 
+    'First Canadian Shave': {
+        'motherfucker': 'Motherfucker',
+        'mother-?fer': 'Motherfucker',
+        'm\\*{4,12}r': 'Motherfucker',
+        'dicken' + _apostophe + 's? cider': 'Dicken\'s Cider',
+        'bl[óo]d av dreki': 'Blód av Dreki',
+        'esther' + _apostophe + 's peppermint' + _any_and + 'grapefruit': 'Esther\'s Peppermint and Grapefruit',
+        'barber\\s*shop': 'Barbershop',
+    },
+
     'Floris London': { },
 
     'Fitjar Islands': { },
 
     'Geo. F. Trumper': { },
 
-    'Gentleman\'s Nod': { },
+    'Gentleman\'s Nod': {
+        'zaharoff': 'Zaharoff Signature',
+        'no. 85': 'Ernest',
+        'no. 01': 'George',
+        'no. 42': 'Jackie',
+        'no. 13': 'Johnny',
+        'no. 11': 'Vincent',
+        'kanpai': 'Kanpai'
+     },
 
     'Gillette': { },
 
@@ -147,18 +208,33 @@ _scent_pats = {
 
     'Haslinger': { },
 
-    'Henri et Victoria': { },
+    'Henri et Victoria': {
+        'duc de santal': 'Duc de Santal',
+        'cognac' + _any_and + 'cuban cigars': 'Cognac and Cuban Cigars',
+        'foug[èeé]re': 'Fougère',
+        'la poire fran[çc]aise?': 'La Poire Française',
+        'deuce': 'Deuce',
+        'chestnut l' + _apostophe + 'orange': 'Chestnut l\'Orange',
+        'absinthe': 'Absinthe',
+        'nautilus': 'Nautilus',
+     },
 
     'Heritage Hill Shave Company': { },
 
     'Highland Springs Soap Company': { },
 
+    'The Holy Black': {
+        'jack' + _any_and + 'ginger': 'Jack & Ginger',
+        'dr\\. jekyl+' + _any_and + 'mr\\. hyde': 'Dr. Jekyll & Mr. Hyde',
+    },
+
     'Hub City Soap Company': { },
+
+    'Los Jabones de Joserra': {
+        'brihuega': 'Brihuega',
+        'kilix': 'Kilix'
+     },
     
-    'L\'Occitane': { },
-
-    'La Toja': { '': 'La Toja' },
-
     'Like Grandpa': { },
     
     'Maggard Razors': { },
@@ -169,42 +245,110 @@ _scent_pats = {
 
     'Mammoth Soaps': { },
 
-    'Martin de Candre': { },
+    'Martin de Candre': {
+        '\\s*$': 'Original',
+        'classic': 'Original',
+        'foug[èeé]re': 'Fougère',
+        'agrumes': 'Agrumes',
+        'vet[iy]ver': 'Vetyver',
+     },
 
-    'Mickey Lee Soapworks': { },
+    'Mickey Lee Soapworks': {
+        'kraken': 'The Kraken',
+        'drunken goat': 'The Drunken Goat',
+        'reuniou?n': 'Réunion',
+        'lu' + _apostophe + 'au': 'Lu\'au',
+     },
 
     'Mike\'s Natural Soaps': { },
 
     'Mitchell\'s Wool Fat': { '': 'Mitchell\'s Wool Fat' },
 
+    'Mondial 1908': {
+        'sandal(?:o\\b|wood)': 'Sandalo',
+        'bergamot(?:to|)' + _any_and + 'neroli': 'Bergamotto Neroli',
+        'bergamot(?:to|) neroli': 'Bergamotto Neroli',
+        'green tobacco': 'Tobacco Verde',
+    },
+
     'Murphy and McNeil': { },
 
-    'Noble Otter': { },
+    'Noble Otter': {
+        'the night before': 'The Night Before',
+        '(?:th[èeé] |)noir et vanille': 'Thé Noir et Vanille',
+        'tnev\\b': 'Thé Noir et Vanille',
+        'northern" elix[ie]r': 'Northern Elixir',
+        'hama[mn]i': 'Hamami',
+        'bar+\\s*bar+': 'Barrbarr',
+        '(?:two|2)\\s*kings': 'Two Kings',
+     },
 
     'Ogallala Bay Rum': {
         'sage,?' + _any_and + 'cedar': 'Bay Rum, Sage & Cedar',
         'limes,?' + _any_and + 'peppercorn': 'Bay Rum, Limes & Peppercorn',
         _any_and + 'sweet orange': 'Bay Rum & Sweet Orange',
         _any_and + 'vanilla': 'Bay Rum & Vanilla',
-        '\\s*$': 'Bay Rum'
+        '\\s*$': 'Bay Rum',
     },
 
     'Old Spice': { },
 
     'Oz Shaving': { },
 
-    'PannaCrema': { },
+    'P.160': {
+        'tipo morbido': 'Tipo Morbido',
+        'tipo duro': 'Tipo Duro'
+    },
+
+    'Palmolive': { 
+        # TODO classic, stick, sensitive, "Rinfrescante"???
+    },
+
+    'PannaCrema': {
+        'nu[àa]via blue?': 'Nuàvia Blu',
+        'nu[àa]via (?:rossa|red)': 'Nuàvia Rossa',
+        'nu[àa]via nema': 'Nuàvia Nema',
+        'nu[àa]via (?:verde|green)': 'Nuàvia Verde',
+        'namaste': 'Namaste',
+    },
+
+    'Panee Soaps': {
+        'the bergamot mystery': 'The Bergamot Mystery',
+        'bergamot mystery': 'The Bergamot Mystery',
+    },
+
+    'Le Père Lucien': {
+        'cologne[\\-\\s]*foug[èeé]re': 'Cologne-Fougère',
+        'traditional': 'Traditionnel',
+        'apricot': 'Abricot'
+     },
 
     'Phoenix and Beau': { },
 
-    'Phoenix Artisan Accoutrements': { },
+    'Phoenix Artisan Accoutrements': {
+        'cad\\b': 'CaD',
+        'club\\s*guy': 'Clubguy',
+        'esp\\b': 'ESP',
+     },
+
+    'Portus Cale': {
+         # looks like only black has been made as shaving soap,
+         # but two patterns to avoid the assumption
+         '\\s*$': 'Black',
+         'black': 'Black'
+    },
 
     'Pré de Provence': { 
-        '(?:number|no\.?|num\.?)\\s*63': 'No. 63',
+        '(?:number|no\.?|num\.?|#|)\\s*63': 'No. 63',
         'bergamot' + _any_and + 'thyme': 'Bergamot and Thyme'
     },
 
-    'Proraso': { },
+    'Proraso': {
+        'green tea' + _any_and + 'oat': 'White',
+        'sandalwood': 'Red',
+        'menthol' + _any_and + 'eucalyptus': 'Green',
+        'aloe' + _any_and + 'vitamin e': 'Blue',
+     },
 
     'Pinnacle Grooming': { },
 
@@ -222,7 +366,12 @@ _scent_pats = {
 
     'Reef Point Soaps': { },
 
-    'Saponificio Varesino': { },
+    'Saponificio Varesino': {
+        'Cosmo[^a-z0-9]+beta 4.2': 'Cosmo',
+        'Cubebe[^a-z0-9]+beta 4.3': 'Cubebe',
+        'Opuntia[^a-z0-9]+beta 4.3': 'Opuntia',
+        '70th Anniversary[^a-z0-9]+beta 4.1': '70th Anniversary',
+     },
 
     'Seaforth!': { },
 
@@ -232,15 +381,35 @@ _scent_pats = {
 
     'Soap Commander': { },
 
-    'Southern Witchcrafts': { },
+    'Southern Witchcrafts': {
+        'grave\\s*fruit': 'Gravefruit',
+        'desa?irology': 'Desairology',
+        'cedar': 'Cedar',
+     },
 
     'Spearhead Shaving Company': { },
 
-    'Stirling Soap Co.': { },
+    'Stirling Soap Co.': {
+        'spice$': 'Stirling Spice',
+        'noir$': 'Stirling Noir',
+        'green$': 'Stirling Green',
+        'gentleman': 'Stirling Gentleman',
+        'rambling man': 'Ramblin Man',
+        'port[\\- ]au[\\- ]prince': 'Port-au-Prince',
+        'Pharoh' + _apostophe + 's Dreamsicle': 'Pharoh\'s Dreamsicle',
+        'con+if+erous': 'Coniferous',
+     },
 
     'Storybook Soapworks': { },
 
-    'The Sudsy Soapery': { },
+    'The Sudsy Soapery': {
+        'top o' + _apostophe + ' the morning': 'Top O\' the Morning',
+        'lavend[ea]r' + _any_and + 'peppermint': 'Lavender & Peppermint',
+        'sandalwood' + _any_and + 'myrrh': 'Sandalwood & Myrrh',
+        'sandalwood' + _any_and + 'citrus': 'Sandalwood & Citrus',
+        'rose' + _any_and + 'black pepper': 'Rose & Black Pepper',
+        'white sage' + _any_and + 'lime': 'White Sage and Lime',
+     },
 
     'Summer Break Soaps': { },
     
@@ -250,11 +419,13 @@ _scent_pats = {
 
     'Taylor of Old Bond Street': { },
 
+    'La Toja': { '': 'La Toja' },
+
     'Vitos': {
         'verde': 'Green',
         'rosso': 'Red',
         'Extra Super': 'Red',
-        '(?super |)red': 'Red',
+        '(?:super |)red': 'Red',
         'lanolin' + _any_and + 'eucalyptus': 'Lanolin & Eucalyptus'
      },
 
@@ -274,7 +445,15 @@ _scent_pats = {
     'William\'s Mug Soap': { '': 'William\'s Mug Soap' },
 
     'Zingari Man': {
-        'nocturne': 'Nocturne'
+        'nocturne': 'Nocturne',
+        '(?:number|no\.?|num\.?|#|)\\s*1\\b': 'No. 1',
+        'socialite': 'The Socialite',
+        '(?:the |)watchm[ae]n': 'The Watchman',
+        'blacksmith': 'The Blacksmith',
+        'soloist': 'The Soloist',
+        'wanderer': 'The Wanderer',
+        'nomad': 'The Nomad',
+        '(?:the |)duo\\b': 'The Duo'
      },
 }
 
