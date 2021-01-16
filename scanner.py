@@ -409,10 +409,7 @@ def saveCommentData( post, cmtFilename ):
 
 not_cap_pattern = re.compile('(?:a|the|and|in|of|on|for|from|at|to|as|so|into|s|y|la|le|l|n)$', re.IGNORECASE)
 
-#TODO recognize space different from apostrophe
-# do not cap after '
-# TODO roman numerals??
-def titleCase( text ):
+def titleCase( text: str ):
     tctext = ''
     pos = 0
     inword = len(text) > 0 and str.isalpha(text[0])
@@ -424,11 +421,14 @@ def titleCase( text ):
         else:
             nextword = str.isalpha(text[i])
         if nextword != inword:
-            if inword and (pos == 0 or not not_cap_pattern.match(text, pos, i)
-                    ) and (allcaps or not text[pos:i].isupper()):
+            candidate = inword and (pos == 0 or (text[pos - 1].isspace()))
+            capword = allcaps or not text[pos].isupper()
+            if candidate and capword and (pos == 0 or not not_cap_pattern.match(text, pos, i)):
                 tctext += text[pos].upper() + text[pos + 1:i].lower()
-            else:
+            elif candidate and capword and not_cap_pattern.match(text, pos, i):
                 tctext += text[pos:i].lower()
+            else:
+                tctext += text[pos:i]
             pos = i
             inword = nextword
     return tctext
