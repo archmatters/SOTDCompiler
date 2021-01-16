@@ -269,7 +269,7 @@ _maker_pats = {
 
     'oaken\\b(?: lab|)': 'Oaken Lab',
 
-    'oatcake(?: shaving|)(?: soaps?|)': 'Oatcake Soaps'
+    'oatcake(?: shaving|)(?: soaps?|)': 'Oatcake Soaps',
 
     'obsessive soap(?:s|\\s+perfect\w+|)': 'Obsessive Soap Perfectionist',
     'osp(?:\\s*soaps?|\\b)': 'Obsessive Soap Perfectionist',
