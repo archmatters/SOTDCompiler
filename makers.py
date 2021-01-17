@@ -2,7 +2,7 @@
 
 import re
 
-_any_and = '\\s*(?:&(?:amp;|)|and|\+|/|×)\\s*'
+_any_and = '\\s*(?:&(?:amp;|)|and|\+|/|×|x)\\s*'
 _apostophe = '(?:\'|&#39;|’|)'
 _opt_company = '\\s*(?:company|co\\.?|)\\s*'
 
@@ -31,11 +31,10 @@ _maker_pats = {
 
     'asylum(?: shave works|)': 'Asylum Shave Works',
 
-    '(?:australian private|ap)\\s*(?:reserve|r\\b)' + _any_and + 'mammoth\\s*(?:soaps?|)': 'Mammoth Soaps',
-    '(?:australian private|ap)\\s*(?:reserve|r\\b)' + _any_and + 'noble otter': 'Noble Otter',
-    '(?:australian private|ap)\\s*(?:reserve|r\\b)' + _any_and + 'Southern Witchcrafts': 'Southern Witchcrafts',
-    '(?:australian private|ap)\\s*(?:reserve|r\\b)' + _any_and + 'story\\s*book soap\\s*works': 'Storybook Soapworks',
-    'ap\\s*r(?:eserve|\\b)' + _any_and + 'story\\s*br?ook soap\\s*works': 'Storybook Soapworks',
+    '(?:australian private|ap)\\s*r(?:eserve|\\b)' + _any_and + 'mammoth\\s*(?:soaps?|)': 'Mammoth Soaps',
+    '(?:australian private|ap)\\s*r(?:eserve|\\b)' + _any_and + 'noble otter': 'Noble Otter',
+    '(?:australian private|ap)\\s*r(?:eserve|\\b)' + _any_and + 'southern witchcrafts': 'Southern Witchcrafts',
+    '(?:australian private|ap)\\s*r(?:eserve|\\b)' + _any_and + 'story\\s*br?ook soap\\s*works': 'Storybook Soapworks',
     '@australianprivatereserve': 'Australian Private Reserve',
     '(?:australian private|ap) reserve': 'Australian Private Reserve',
 
@@ -83,8 +82,9 @@ _maker_pats = {
 
     'central texas (?:soaps?|)': 'Central Texas Soaps',
 
+    'chicago groom\\w+' + _opt_company + '(?:\((?:formerly|)\\s+oleo\\b[^)]+\)|)' + _any_and + 'wcs': 'West Coast Shaving',
+    'chicago groom\\w+' + _opt_company + '(?:\((?:formerly|)\\s+oleo\\b[^)]+\)|)': 'Chicago Grooming Co.',
     'oleo\\s*(?:soapworks|soap|)': 'Chicago Grooming Co.',
-    'chicago groom\\w+' + _opt_company + '(?:\(formerly[^)]+\)|)': 'Chicago Grooming Co.',
 
     'zoologist(?: perfumes|)\\s*/\\s*chiseled face': 'Chiseled Face',
     'chiseled face\\s*/\\s*zoologist(?: perfumes|)': 'Chiseled Face',
@@ -193,6 +193,10 @@ _maker_pats = {
 
     '(?:the |)holy black': 'The Holy Black',
 
+    'mammoth\\s*(?:soaps?|)' + _any_and + 'ap(?:\\s*reserve|r\\b)': 'House of Mammoth',
+    '@?mammoth\\s*(?:soaps?|)': 'House of Mammoth',
+    'house of mammoth': 'House of Mammoth',
+
     'hub city\\s*(?:soap' + _opt_company + '|)': 'Hub City Soap Company',
 
     'imperial\\s*(?:barber (?:products|grade products?|)|)': 'Imperial Barber',
@@ -230,9 +234,6 @@ _maker_pats = {
 
     'mama bear': 'Mama Bear',
 
-    'mammoth\\s*(?:soaps?|)' + _any_and + 'ap(?:\\s*reserve|r\\b)': 'Mammoth Soaps',
-    '@?mammoth\\s*(?:soaps?|)': 'Mammoth Soaps',
-
     'martin de candre': 'Martin de Candre',
 
     'matti lindholm(?: shaving(?: supplies|)|)': 'Matti Lindholm Shaving Supplies',
@@ -260,6 +261,7 @@ _maker_pats = {
 
     'nivea\\b': 'Nivea',
 
+    'nob(?:le|el) otter' + _any_and + '(?:australian private|ap)\\s*r(?:eserve|\\b)': 'Noble Otter',
     '@?noble_otter': 'Noble Otter',
     'nob(?:le|el) otter': 'Noble Otter',
     'apr' + _any_and + 'no': 'Noble Otter',
@@ -301,7 +303,7 @@ _maker_pats = {
 
     'park avenue': 'Park Avenue',
 
-    'l' + _apostophe + 'asinerie de la vioune' + _any_and + 'le p[èeé]re lucien'
+    'l' + _apostophe + 'asinerie de la vioune' + _any_and + 'le p[èeé]re lucien': 'Le Père Lucien',
     'le p[èeé]re luciene?': 'Le Père Lucien',
 
     'pereiras?\\b(?:shavery|)': 'Pereira Shavery',
@@ -352,7 +354,7 @@ _maker_pats = {
 
     'some irish guy' + _apostophe + 's': 'Some Irish Guy\'s',
 
-    'southern witchcrafts\\s*/\\s*ap(?: reserve|r\\b)': 'Southern Witchcrafts',
+    'southern witchcrafts' + _any_and + 'ap(?: reserve|r\\b)': 'Southern Witchcrafts',
     'southern\\s*witchcraf?ts?': 'Southern Witchcrafts',
     'southern\\s*witchworks?': 'Southern Witchcrafts',
 
@@ -417,7 +419,9 @@ _maker_pats = {
 
     'vito' + _apostophe + 's': 'Vitos',
 
+    'west coast shaving' + _any_and + 'chicago groom\w+' + _opt_company + '(?:\((?:formerly|)\\s+oleo\\b[^)]+\)|)': 'West Coast Shaving',
     'west coast shaving' + _any_and + 'oleo\\b\\s*(?:soap\\s*works|soap)': 'West Coast Shaving',
+    'west coast shaving': 'West Coast Shaving',
 
     'west of olympia': 'West of Olympia',
 
@@ -431,7 +435,7 @@ _maker_pats = {
 
     'wickham(?: (?:soap|shave)' + _opt_company + '|)': 'Wickham Soap Co.',
 
-    'william' + _apostophe + 's\\s(?:mug soap|)': 'William\'s Mug Soap',
+    'william' + _apostophe + 's(?: mug soap|)': 'Williams Mug Soap',
 
     'wood\\s*box(?:\\s*soap|)': 'Wood Box Soap',
 
@@ -464,63 +468,67 @@ _maker_pats = {
 
     # things that aren't really "lather," but for some reason got used anyway
     'k[ae]rosene\\.*': 'kerosene',
+}
 
+_abbrev_pats = {
     # abbreviations or more common words
-    'apr\\b': 'Australian Private Reserve',
-    'b\\s*(?:&(?:amp;|)|\\+|a|-|)\\s*m\\b': 'Barrister and Mann',
-    'cb\\b': 'Catie\'s Bubbles',
-    'cbl\\b': 'CBL Soaps',
-    'cf\\b': 'Chiseled Face',
-    'crsw\\b': 'Cold River Soap Works',
-    'esc\\b': 'Executive Shaving',
+    'apr': 'Australian Private Reserve',
+    'b\\s*(?:&(?:amp;|)|\\+|a|-|)\\s*m': 'Barrister and Mann',
+    'cb': 'Catie\'s Bubbles',
+    'cbl': 'CBL Soaps',
+    'cf': 'Chiseled Face',
+    'crsw': 'Cold River Soap Works',
+    'esc': 'Executive Shaving',
+    'fcs': 'First Canadian Shave',
     'l' + _any_and + 'l': 'Declaration Grooming',
     'hssc': 'Highland Springs Soap Company',
-    'thb\\n': 'The Holy Black',
+    'thb': 'The Holy Black',
     'lassco?': 'Los Angeles Shaving Soap Co.',
-    'mlsw?\\b': 'Mickey Lee Soapworks',
+    'mlsw?': 'Mickey Lee Soapworks',
     'mike' + _apostophe + 's': 'Mike\'s Naturual Soaps',
+    'mwf': 'Mitchell\'s Wool Fat',
     'm' + _any_and + 'm\\b': 'Murphy & McNeil',
-    'pdp\\b': 'Pré de Provence',
-    'sv\\b': 'Saponificio Varesino',
+    'pdp': 'Pré de Provence',
+    'sv': 'Saponificio Varesino',
     'a' + _any_and + 'e': 'Ariana & Evans',
-    'sjol\\b': 'St. James of London',
-    'sdp\\b': 'Sapone di Paolo',
-    'sw\\b': 'Southern Witchcrafts',
-    'sbsw\\b': 'Storybook Soapworks',
-    't' + _any_and + 's\\b': 'Tallow + Steel',
-    'tfs\\b': 'Tcheon Fung Sing',
-    'ttffc\\b': 'Through the Fire Fine Craft',
-    'wk\\b': 'Wholly Kaw',
+    'sjol': 'St. James of London',
+    'sdp': 'Sapone di Paolo',
+    'sw': 'Southern Witchcrafts',
+    'sbsw': 'Storybook Soapworks',
+    't' + _any_and + 's': 'Tallow + Steel',
+    'tfs': 'Tcheon Fung Sing',
+    'ttffc': 'Through the Fire Fine Craft',
+    'wk': 'Wholly Kaw',
+    'wms': 'William\'s Mug Soap',
     # hardware vendors
-    'aos\\b': 'Art of Shaving',
-    'dg\\b(?:/CL|)': 'Declaration Grooming',
-    'fine\\b': 'Fine Accoutrements',
-    'n\\.?\\s*o\\.?\\s+(.*)': 'Noble Otter',
-    'paa\\b': 'Phoenix Artisan Accoutrements',
+    'aos': 'Art of Shaving',
+    'dg(?:/CL|)': 'Declaration Grooming',
+    'fine': 'Fine Accoutrements',
+    'n\\.?\\s*o\\.?': 'Noble Otter',
+    'paa': 'Phoenix Artisan Accoutrements',
     'rr': 'RazoRock',
-    'sbs\\b': 'Summer Break Soaps',
-    'wcs\\b': 'West Coast Shaving',
-    'wsp\\b': 'Wet Shaving Products',
-    'wwsc\\b': 'Wild West Shaving Co.',
-
-    # other random patterns to try
-    # someone once misabbreviated DG as DA
-    # TODO this might be better done from scent-first matching
-    'da\\b': 'Declaration Grooming',
+    'sbs': 'Summer Break Soaps',
+    'wcs': 'West Coast Shaving',
+    'wsp': 'Wet Shaving Products',
+    'wwsc': 'Wild West Shaving Co.',
 }
 
 # TODO special category for more complicated patterns,
-# e.g. 'wms\\s*[_\*]*\\s*$' for William's (single scent makes misidentification more likely)
+# e.g. 'wms\\s*[_\*]*\\s*$' for Williams (single scent makes misidentification more likely)
 
-_ending = '\\s*(.*)'
+_ending = '\\.?\\s*(.*)'
 _compiled_pats = None
+_compiled_abbrev = None
 
 def _compile():
-    global _compiled_pats
+    global _compiled_pats, _compiled_abbrev
     if _compiled_pats is None:
         _compiled_pats = { }
         for pattern in _maker_pats:
             _compiled_pats[re.compile(pattern + _ending, re.IGNORECASE)] = _maker_pats[pattern]
+        _compiled_abbrev = { }
+        for pattern in _abbrev_pats:
+            _compiled_abbrev[re.compile('\\b' + pattern + '\\b' + _ending, re.IGNORECASE)] = _abbrev_pats[pattern]
 
 
 def matchMaker( text ):
@@ -534,10 +542,14 @@ def matchMaker( text ):
         result = pattern.match(text)
         if result:
             return { 'match': result, 'name': _compiled_pats[pattern] }
+    for pattern in _compiled_abbrev:
+        result = pattern.match(text)
+        if result:
+            return { 'match': result, 'name': _compiled_abbrev[pattern] }
     return None
 
 
-def searchMaker( text ):
+def searchMaker( text: str ):
     """ Searches for a maker through the entire provided text. Will preferably
         return a match at the beginning of a line (less non-alphanumeric
         chars). But will also return a match in the middle of a line. Returns
@@ -545,17 +557,23 @@ def searchMaker( text ):
             'match': the result object from Pattern.match()
             'name': the standard maker name
             'first': boolean value indicating if the match is the first word on a line
-            'abbreviated': boolean value indicating an abbreviation match
+            'abbreviated': boolean value indicating an abbreviation match instead of a spelled out maker name
     """
-    # TODO recognize abbreviations
     # TODO if we match a hardware vendor, keep looking for a soapmaker
-    # TODO we have a real problem with Noble Otter matching sentences which start with "No"
+    # TODO we have a real problem with Noble Otter's abbreviation matching the word "no"
     # this might also be a problem with other two or three letter abbreviations
     _compile()
+    result = _subSearch(text, _compiled_pats)
+    if not result:
+        result = _subSearch(text, _compiled_abbrev)
+    return result
+
+
+def _subSearch( text: str, pat_dict: dict ):
     best_match = None
     best_pos = len(text)
     best_begins_line = False
-    for pattern in _compiled_pats:
+    for pattern in pat_dict:
         result = pattern.search(text)
         if result:
             begin_line = False
@@ -582,4 +600,3 @@ def searchMaker( text ):
             'abbreviated': False
         }
     return None
-
