@@ -442,8 +442,10 @@ _maker_pats = {
     'zingar[io]\\s*(?:man|)' + _any_and + 'b\\s*(?:&(?:amp;|)|\\+|a|)\\s*m\\b': 'Zingari Man',
     'zingari\\s*(?:man|)' + _any_and + 'wcs\\b': 'Zingari Man',
     'zingar[io]\\s*(?:mann?|)': 'Zingari Man',
+}
 
-    # also make hardware
+# these also make hardware
+_hw_maker_pats = {
     '(?:the |)art of shaving': 'Art of Shaving',
     '@declarationgrooming': 'Declaration Grooming',
     'declaration\\s*(?:grooming|)': 'Declaration Grooming',
@@ -458,8 +460,9 @@ _maker_pats = {
     'west coast shaving': 'West Coast Shaving',
     'wet shaving products': 'Wet Shaving Products',
     'wild west shaving' + _opt_company: 'Wild West Shaving Co.',
+}
 
-    # other
+_other_pats = {
     '(?:friend' + _apostophe + 's|) *homemade\\s+[a-z\\s\\(\\)]*?soap\\.?': '(homemade)',
     'mug of many samples': 'Mug of many samples',
     'tester(?: soap|)': 'Tester',
@@ -518,14 +521,22 @@ _abbrev_pats = {
 
 _ending = '\\.?\\s*(.*)'
 _compiled_pats = None
+_compiled_hw = None
+_compiled_other = None
 _compiled_abbrev = None
 
 def _compile():
-    global _compiled_pats, _compiled_abbrev
+    global _compiled_pats, _compiled_abbrev, _compiled_hw, _compiled_other
     if _compiled_pats is None:
         _compiled_pats = { }
         for pattern in _maker_pats:
             _compiled_pats[re.compile(pattern + _ending, re.IGNORECASE)] = _maker_pats[pattern]
+        _compiled_hw = { }
+        for pattern in _hw_maker_pats:
+            _compiled_hw[re.compile(pattern + _ending, re.IGNORECASE)] = _hw_maker_pats[pattern]
+        _compiled_other = { }
+        for pattern in _other_pats:
+            _compiled_other[re.compile(pattern + _ending, re.IGNORECASE)] = _other_pats[pattern]
         _compiled_abbrev = { }
         for pattern in _abbrev_pats:
             _compiled_abbrev[re.compile('\\b' + pattern + '\\b' + _ending, re.IGNORECASE)] = _abbrev_pats[pattern]
@@ -542,11 +553,20 @@ def matchMaker( text ):
         result = pattern.match(text)
         if result:
             return { 'match': result, 'name': _compiled_pats[pattern] }
+    saved_full_hw = None
+    for pattern in _compiled_hw:
+        result = pattern.match(text)
+        if result:
+            saved_full_hw = { 'match': result, 'name': _compiled_hw[pattern] }
+    for pattern in _compiled_other:
+        result = pattern.match(text)
+        if result:
+            return { 'match': result, 'name': _compiled_other[pattern] }
     for pattern in _compiled_abbrev:
         result = pattern.match(text)
         if result:
             return { 'match': result, 'name': _compiled_abbrev[pattern] }
-    return None
+    return saved_full_hw
 
 
 def searchMaker( text: str ):
@@ -559,14 +579,32 @@ def searchMaker( text: str ):
             'first': boolean value indicating if the match is the first word on a line
             'abbreviated': boolean value indicating an abbreviation match instead of a spelled out maker name
     """
-    # TODO if we match a hardware vendor, keep looking for a soapmaker
     # TODO we have a real problem with Noble Otter's abbreviation matching the word "no"
     # this might also be a problem with other two or three letter abbreviations
     _compile()
+    saved_full_hw = None
+    rpos = len(text)
+    multiline = text.find("\n") >= 0
+
     result = _subSearch(text, _compiled_pats)
-    if not result:
-        result = _subSearch(text, _compiled_abbrev)
-    return result
+    if result:
+        rpos = result['match'].start()
+    if not result or multiline:
+        saved_full_hw = _subSearch(text, _compiled_hw)
+        next_rs = _subSearch(text, _compiled_other)
+        if next_rs and next_rs['match'].start() < rpos:
+            result = next_rs
+            rpos = result['match'].start()
+    if not result or multiline:
+        next_rs = _subSearch(text, _compiled_abbrev)
+        if next_rs and next_rs['match'].start() < rpos:
+            result = next_rs
+            rpos = result['match'].start()
+            result['abbreviated'] = True
+    if result:
+        return result
+    else:
+        return saved_full_hw
 
 
 def _subSearch( text: str, pat_dict: dict ):
@@ -595,8 +633,8 @@ def _subSearch( text: str, pat_dict: dict ):
     if best_match:
         return {
             'match': best_match,
-            'name': _compiled_pats[best_match.re],
-            'first': False,
+            'name': pat_dict[best_match.re],
+            'first': best_begins_line,
             'abbreviated': False
         }
     return None

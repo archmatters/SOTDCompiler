@@ -54,8 +54,6 @@ if args.month:
             and sotd_month > date.today().month):
         raise SystemExit(f"{aparser.prog}: error: '{args.month}' is in the future!")
 
-print(f"Year={sotd_year}, Month={sotd_month}")
-raise SystemExit()
 
 def postLoop():
     post_count = 0

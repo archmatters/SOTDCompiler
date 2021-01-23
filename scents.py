@@ -4,6 +4,7 @@ import re
 
 _apostophe = '(?:\'|&#39;|’|)'
 _any_and = '\\s*(?:&(?:amp;|)|and|\+)\\s*'
+_ending = '[\\.,]?'
 
 _scent_pats = {
     'Abbate y la Mantia': {
@@ -66,6 +67,7 @@ _scent_pats = {
         'cool$': 'Reserve Cool',
         'classic$': 'Reserve Classic',
         'le grand (?:cyphre|chypre)': 'Le Grand Chypre',
+        '(?:motherfuckin(?:\'|g)|mf) roam': 'Roam',
      },
 
     'BAUME.BE': {
@@ -204,8 +206,6 @@ _scent_pats = {
 
     'Grooming Department': { },
 
-    'First Canadian Shave Soap Co.': { },
-
     'Haslinger': { },
 
     'Henri et Victoria': {
@@ -320,7 +320,8 @@ _scent_pats = {
     'Le Père Lucien': {
         'cologne[\\-\\s]*foug[èeé]re': 'Cologne-Fougère',
         'traditional': 'Traditionnel',
-        'apricot': 'Abricot'
+        'apricot': 'Abricot',
+        'oud[\\s\\-]*santal': 'Oud-Santal',
      },
 
     'Phoenix and Beau': { },
@@ -398,6 +399,7 @@ _scent_pats = {
         'port[\\- ]au[\\- ]prince': 'Port-au-Prince',
         'Pharoh' + _apostophe + 's Dreamsicle': 'Pharoh\'s Dreamsicle',
         'con+if+erous': 'Coniferous',
+        'arcadia': 'Arkadia',
      },
 
     'Storybook Soapworks': { },
@@ -442,7 +444,7 @@ _scent_pats = {
 
     'Wickham Soap Co.': { },
 
-    'William\'s Mug Soap': { '': 'William\'s Mug Soap' },
+    'Williams Mug Soap': { '': 'Williams Mug Soap' },
 
     'Zingari Man': {
         'nocturne': 'Nocturne',
@@ -469,10 +471,11 @@ def _compile( name ):
         map = _scent_pats[name]
         comp = { }
         for pattern in map:
-            comp[re.compile(pattern, re.IGNORECASE)] = map[pattern]
+            comp[re.compile(pattern + _ending, re.IGNORECASE)] = map[pattern]
         _compiled_pats[name] = comp
         return True
     return False
+
 
 def matchScent( maker, scent ):
     """ Attempts to match a scent name.  If successful, a dict is returned with the
@@ -488,6 +491,7 @@ def matchScent( maker, scent ):
         if result:
             return { 'result': result, 'name': _compiled_pats[maker][pattern] }
     return None
+
 
 def getSingleScent( maker ):
     """ If only one single scent is known for this maker, its name is returned.

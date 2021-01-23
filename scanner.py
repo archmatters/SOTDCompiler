@@ -17,7 +17,7 @@ lather_pattern = re.compile('''(?:^|[\n])[^a-z]*
 type_suffix_pattern = re.compile('(?: - (?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream|(?:soap|) sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\|)\\s*')
-posessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
+possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
 by_pattern = re.compile('(.*) by\\s*$', re.IGNORECASE)
 
 sotd_pattern = re.compile('sotd', re.IGNORECASE)
@@ -80,6 +80,15 @@ def getSOTDDate( post ):
 
 
 def getThreadComments( post, post_date ):
+    """ Returns a list of top-level comments, using local file cache if available.
+        If this post is present in the file cache, comments will be loaded from that
+        file.  Otherwise, we will load all top-level comments from Reddit and persist
+        them in the file cache.  Future calls for the same post will use that file
+        unless it is deleted.
+            post: the Reddit post object
+            post_date: a datetime.date object, from the post title;
+                       this is used to name the cache file
+    """
     # if saved data file exists, load comments from there instead of making a Reddit call
     Path('postdata').mkdir(exist_ok = True)
     cmtFilename = f"postdata/{post_date.strftime('%Y-%m-%d')}-{post.id}.json"
@@ -94,10 +103,14 @@ def getThreadComments( post, post_date ):
             return rdcoms
 
     # ensure all top level comments are loaded
-    for tlc in post.comments:
-        if isinstance(tlc, praw.models.MoreComments):
-            post.comments.replace_more(limit=None)
-            break
+    complete = False
+    while not complete:
+        complete = True
+        for tlc in post.comments:
+            if isinstance(tlc, praw.models.MoreComments):
+                complete = False
+                post.comments.replace_more(limit=None)
+                break
 
     # save comments so we can quickly rescan during development (see above load)
     saveCommentData(post, cmtFilename)
@@ -105,13 +118,18 @@ def getThreadComments( post, post_date ):
     return post.comments
 
 
-def removeMarkdown( text ):
+def removeMarkdown( text: str ):
     """ Necessarily not correct, as this does not operate on the full body.
     """
-    # blind assumption
-    text = text.replace('**', '').replace('__', '')
-    
-    return text
+    clean = ''
+    for i in range(len(text)):
+        if text[i] == '*' or text[i] == '_' or text[i] == '\\':
+            if i == 0 or (i > 0 and text[i - 1] != '\\'
+                    and ((i < len(text) - 1 and (text[i - 1] != ' ' or text[i + 1] != ' '))
+                    or (i == len(text) - 1 and text[i - 1] != ' '))):
+                continue
+        clean += text[i]
+    return clean
 
 
 def scanComment( tlc, post_date, dataFile ):
@@ -146,7 +164,7 @@ tagpat = re.compile('<[^>]*>')
 mnlpat = re.compile("\n\n+")
 
 def scanBody( tlc, silent = False ):
-    """ Returns a dict with the following properties:
+    """ Returns a dict with the following members:
           lather: looks like the lather line in the post
           maker: soapmaker, if found
           scent: scent name, if found
@@ -189,7 +207,7 @@ def scanBody( tlc, silent = False ):
 
         if maker:
             # some people make it possessive
-            result = posessive_pattern.match(scent)
+            result = possessive_pattern.match(scent)
             if result and not str.isspace(maker[-1]):
                 scent = scent[result.end():]
         else:
@@ -319,7 +337,7 @@ def scanBody( tlc, silent = False ):
                         scent = tlc.body[nlpos + 1:result['match'].start()]
 
             # some people make it possessive
-            result = posessive_pattern.match(scent)
+            result = possessive_pattern.match(scent)
             if result and not str.isspace(maker[-1]):
                 scent = scent[result.end():]
 
