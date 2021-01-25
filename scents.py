@@ -465,15 +465,24 @@ def _compile( name ):
     global _compiled_pats
     if _compiled_pats is None:
         _compiled_pats = { }
-    if name in _compiled_pats:
-        return True
-    if name in _scent_pats:
-        map = _scent_pats[name]
-        comp = { }
-        for pattern in map:
-            comp[re.compile(pattern + _ending, re.IGNORECASE)] = map[pattern]
-        _compiled_pats[name] = comp
-        return True
+    if name:
+        if name in _compiled_pats:
+            return True
+        if name in _scent_pats:
+            map = _scent_pats[name]
+            comp = { }
+            for pattern in map:
+                comp[re.compile(pattern + _ending, re.IGNORECASE)] = map[pattern]
+            _compiled_pats[name] = comp
+            return True
+    else:
+        for mkr in _scent_pats:
+            if mkr not in _compiled_pats:
+                map = _scent_pats[mkr]
+                comp = { }
+                for pattern in map:
+                    comp[re.compile(pattern + _ending, re.IGNORECASE)] = map[pattern]
+                _compiled_pats[mkr] = comp
     return False
 
 
@@ -491,6 +500,46 @@ def matchScent( maker, scent ):
         if result:
             return { 'result': result, 'name': _compiled_pats[maker][pattern] }
     return None
+
+
+def findAnyScent( text ):
+    _compile(None)
+    best = None
+    issearch = False
+    for maker in _compiled_pats:
+        if len(_compiled_pats[maker]) < 2:
+            # don't do single scents for now
+            continue
+        for pattern in _compiled_pats[maker]:
+            if (pattern.match('') or pattern.match('cream') or pattern.match('soap')
+                    or _simple_cream_soap_pat.match(_compiled_pats[maker][pattern])):
+                # simple cream/soap; not valid for scent-first match
+                # TODO uniqueness test
+                continue
+            result = pattern.match(text)
+            if result and (not best
+                    or result.start() < best['result'].start()
+                    or (result.end() - result.start() > best['result'].end() - best['result'].start())):
+                best = {
+                    'result': result,
+                    'scent': _compiled_pats[maker][pattern],
+                    'maker': maker,
+                    'lather': text
+                }
+            elif not best or issearch:
+                result = pattern.search(text)
+                if result and (not best
+                        or result.start() < best['result'].start()
+                        or (result.end() - result.start() > best['result'].end() - best['result'].start())):
+                    issearch = True
+                    best = {
+                        'result': result,
+                        'scent': _compiled_pats[maker][pattern],
+                        'maker': maker,
+                        'lather': text
+                    }
+
+    return best
 
 
 def getSingleScent( maker ):

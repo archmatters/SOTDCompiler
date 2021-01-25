@@ -11,14 +11,20 @@ import re
 from pathlib import Path
 
 lather_pattern = re.compile('''(?:^|[\n])[^a-z]*
-        (?:lather|shaving\\s+(?:soap|cream)|soap/cream|soap|cream\\b)
-        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|)
+        (?:soap/lather|lather|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream\\b)
+        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('(?: - (?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream|(?:soap|) sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
+lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
+        (?:shave\\b)
+        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
+        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
+type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream|(?:soap\\s*|)sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\|)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
 by_pattern = re.compile('(.*) by\\s*$', re.IGNORECASE)
+sample_pattern = re.compile('\\s*\\(sample(?: size|)\\)\\s*$', re.IGNORECASE)
+quoted_pattern = re.compile('\\s*(["\'])(.*)\\1\\s*')
 
 sotd_pattern = re.compile('sotd', re.IGNORECASE)
 ymd_pattern = re.compile('(\\d{4})-(\\d\\d)-(\\d\\d)', re.IGNORECASE)
@@ -27,6 +33,25 @@ wmdy_pattern = re.compile('([a-z]{2,})\s+(\\d+),?\s+(\\d{2,4})', re.IGNORECASE)
 wdmy_pattern = re.compile('(\d+)[^a-z]*([a-z]{2,})[^a-z]*(\\d{2,4})', re.IGNORECASE)
 
 month_words = [ 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec' ]
+
+# strip HTML tags
+ppat = re.compile('<\\s*p\\s*/?>', re.IGNORECASE)
+tagpat = re.compile('<[^>]*>')
+mnlpat = re.compile("\n\n+")
+
+class LatherMatch:
+    lather = ''
+    maker = ''
+    scent = ''
+    confidence = 0
+    context = ''
+    plaintext = ''
+
+    def __init__( self, body_html: str ):
+        self.plaintext = mnlpat.sub("\n", re.sub("^\n+", '', tagpat.sub('', ppat.sub("\n", body_html))))
+
+    def getConfidenceText( self ):
+        return str(self.confidence) + '.' + self.context
 
 def getSOTDDate( post ):
     sotd_match = sotd_pattern.search(post.title)
@@ -79,7 +104,7 @@ def getSOTDDate( post ):
         return None
 
 
-def getThreadComments( post, post_date ):
+def getThreadComments( post, post_date, verbose = False ):
     """ Returns a list of top-level comments, using local file cache if available.
         If this post is present in the file cache, comments will be loaded from that
         file.  Otherwise, we will load all top-level comments from Reddit and persist
@@ -100,6 +125,8 @@ def getThreadComments( post, post_date ):
                 if not cmt['author']:
                     cmt['author'] = '[deleted]'
                 rdcoms.append(praw.reddit.models.Comment(reddit='Reddit', _data=cmt))
+            if verbose:
+                print(f"Loaded cache for {post.title}.")
             return rdcoms
 
     # ensure all top level comments are loaded
@@ -114,6 +141,8 @@ def getThreadComments( post, post_date ):
 
     # save comments so we can quickly rescan during development (see above load)
     saveCommentData(post, cmtFilename)
+    if verbose:
+        print(f"Processed {post.title}.")
     
     return post.comments
 
@@ -144,13 +173,13 @@ def scanComment( tlc, post_date, dataFile ):
     if tlc.author:
         author_name = tlc.author.name
 
-    trim_lather = details['lather']
+    trim_lather = details.lather
     if trim_lather is not None:
         trim_lather = trim_lather.strip()
     data = [ post_date.strftime('%Y-%m-%d'),
             datetime.datetime.fromtimestamp(tlc.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
-            author_name, details['maker'], details['scent'], str(details['confidence']),
-            trim_lather, details['plaintext'], 'https://old.reddit.com' + tlc.permalink ]
+            author_name, details.maker, details.scent, details.getConfidenceText(),
+            trim_lather, tlc.id, 'https://old.reddit.com' + tlc.permalink ]
     dataFile.write('"')
     for i in range(len(data)):
         if i > 0:
@@ -159,242 +188,166 @@ def scanComment( tlc, post_date, dataFile ):
             dataFile.write(data[i].replace('"','""'))
     dataFile.write("\"\n")
 
-ppat = re.compile('<\\s*p\\s*/?>', re.IGNORECASE)
-tagpat = re.compile('<[^>]*>')
-mnlpat = re.compile("\n\n+")
+
+def scentFirst( body: str, lather: str ):
+    result = None
+    if lather:
+        result = scents.findAnyScent(lather.strip())
+    else:
+        for line in body.split("\n"):
+            if line.strip():
+                result = scents.findAnyScent(line.strip())
+                if result:
+                    break
+    return result
+
+
+def cleanAndMatchScent( lather: LatherMatch ):
+    text = lather.scent
+    lpos = text.find('](')
+    if lpos > 0:
+        bpos = text.find('[', 0, lpos)
+        if bpos > 0:
+            text = text[0:bpos]
+        elif bpos == 0:
+            text = text[1:lpos]
+        else:
+            text = text[0:lpos]
+
+    text = removeMarkdown(text)
+
+    result = separator_pattern.match(text)
+    if result:
+        text = text[result.end():]
+
+    text = text.strip()
+    if text.endswith('.') or text.endswith(','):
+        text = text[0:-1]
+
+    result = sample_pattern.search(text)
+    if result:
+        text = text[0:result.start()]
+
+    result = type_suffix_pattern.search(text)
+    if result:
+        text = text[0:result.start()]
+
+    result = quoted_pattern.match(text)
+    if result:
+        text = result.group(2)
+    text = text.strip()
+
+    result = scents.matchScent(lather.maker, text)
+    if result:
+        lather.scent = result['name']
+        lather.context += 'X'
+        lather.confidence += 4
+        return True
+    elif len(lather.scent) > 0:
+        lather.scent = text
+        lather.context += 'Y'
+        lather.confidence += 3
+    return False
+
 
 def scanBody( tlc, silent = False ):
     """ Returns a dict with the following members:
           lather: looks like the lather line in the post
           maker: soapmaker, if found
           scent: scent name, if found
-          known_maker: if the maker is known to makers.maker_pats
     """
-    lather = ''
-    maker = ''
-    scent = ''
-    resolved = False
-    confidence_max = 10
-    confidence = 0
+    lather = LatherMatch(body_html=tlc.body_html)
+    # L if lather; [MNO] for maker, [B][1XYS] for scent
+
+    if not tlc.author and tlc.body == '[deleted]':
+        return lather
 
     # TODO remove markdown but NOT links
     # some people use 'maker - scent [link to scent](http...)
-    lm = lather_pattern.search(tlc.body)
-    if lm:
-        lather = lm.group(1)
-        confidence += 2
-        result = makers.matchMaker(lather)
+    lmr = lather_pattern.search(tlc.body)
+    if not lmr:
+        lmr = lather_alt_pattern.search(tlc.body)
+    if lmr:
+        lather.lather = lmr.group(1).strip()
+        lather.context = 'L'
+        lather.confidence = 3
+        result = makers.matchMaker(lather.lather)
         if result:
-            maker = result['name']
-            scent = result['match'].group(1)
-            resolved = True
-            confidence += 3
-
-        # fallback case
-        if maker and not scent:
-            single = scents.getSingleScent(maker)
-            if single:
-                # single known scent
-                confidence += 3
-                scent = single
+            lather.maker = result['name']
+            lather.scent = result['match'].group(1)
+            lather.context += 'M'
+            if result['abbreviated']:
+                lather.confidence += 2
             else:
-                confidence -= 2
-                lpos = lather.find(' - ')
-                if lpos > 1 and not type_suffix_pattern.match(lather, lpos):
-                    maker = lather[0:lpos]
-                    scent = lather[lpos + 3:]
-                    confidence += 1
-
-        if maker:
-            # some people make it possessive
-            result = possessive_pattern.match(scent)
-            if result and not str.isspace(maker[-1]):
-                scent = scent[result.end():]
+                lather.confidence += 3
         else:
-            result = makers.searchMaker(lather)
+            result = makers.searchMaker(lather.lather)
             if result:
-                maker = result['name']
-                scent = lather[0:result['match'].start()]
-                byes = by_pattern.match(scent)
-                if byes:
-                    scent = byes.group(1)
-                if scent:
-                    lpos = len(scent)
-                    while not str.isalnum(scent[lpos - 1]):
-                        lpos -= 1
-                    if lpos < len(scent) and separator_pattern.match(scent, lpos):
-                        scent = scent[0:lpos]
-            else:
-                result = makers.searchMaker(tlc.body)
-                if result:
-                    #lather = result['match'].group(0)
-                    maker = result['name']
-                    scent = result['match'].group(1)
-                    confidence += 1
-                    if result['first']:
-                        confidence += 2
-                    else:
-                        scent = tlc.body[lm.end() - len(lather):result['match'].start()]
-            if result and not result['abbreviated']:
-                confidence += 1
-            # duplicate for now; not ready to merge into a single branch
-            if maker and not scent:
-                single = scents.getSingleScent(maker)
-                if single:
-                    # single known scent
-                    confidence += 1
-                    scent = single
+                lather.maker = result['name']
+                lather.scent = result['match'].group(1)
+                if result['abbreviated']:
+                    lather.context += 'O'
+                    lather.confidence += 1
                 else:
-                    # TODO if not result['first'], look before maker
-                    confidence -= 1
+                    lather.context += 'N'
+                    lather.confidence += 2
+                if not lather.scent:
+                    lather.scent = lather.lather[0:result['match'].start()].strip()
+                    lather.context += 'B'
 
-        if not maker:
-            lpos = lather.find(' - ')
-            if lpos > 1:
-                maker = lather[0:lpos]
-                scent = lather[lpos + 3:]
-            if makers.matchMaker(scent) and not makers.matchMaker(maker):
-                swap = maker
-                maker = scent
-                scent = swap
-        
-        scent = scent.strip()
-        lpos = scent.find('](')
-        if lpos > 0:
-            bpos = scent.find('[', 0, lpos)
-            if bpos > 0:
-                scent = scent[0:bpos]
-            elif bpos == 0:
-                scent = scent[1:lpos]
-            else:
-                scent = scent[0:lpos]
-        
-        result = separator_pattern.match(scent)
-        if result:
-            scent = scent[result.end():]
-        
-        result = type_suffix_pattern.search(scent)
-        if result:
-            confidence += 3
-            scent = scent[0:result.start()]
-        
-        scent = scent.strip()
+        if lather.scent:
+            cleanAndMatchScent(lather)
+        elif lather.maker and scents.getSingleScent(lather.maker):
+            lather.context += '1'
+            lather.confidence += 2
+        elif lather.maker:
+            lather.confidence -= 1
 
-        # now, finally
-        if maker:
-            result = scents.matchScent(maker, scent)
-            if result:
-                confidence += 2
-                scent = result['name']
-            else:
-                scent = removeMarkdown(scent.strip()).title()
+        if lather.maker:
+            print(f'Primary match "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
         else:
-            # TODO shouldn't this be moved up?
-            # why was it moved here?
-            maker = lather.strip()
-            lpos = maker.find('](')
-            if lpos > 0:
-                bpos = maker.find('[', 0, lpos)
-                if bpos > 0:
-                    maker = maker[0:bpos]
-                elif bpos == 0:
-                    maker = maker[1:lpos]
-                else:
-                    maker = maker[0:lpos]
-            scent = removeMarkdown(scent.strip())
-
-        if not silent:
-            if resolved:
-                print(f"Matched on '{maker}' / '{scent}' from {tlc.author} ({confidence}; {tlc.id})")
-            elif maker and scent:
-                print(f"Resolved '{maker}' / '{scent}' ({confidence}; {tlc.id} by {tlc.author})")
+            result = scentFirst(tlc.body, lather.lather)
+            if result:
+                lather.maker = result['maker']
+                lather.scent = result['scent']
+                lather.context += 'S'
+                lather.confidence += 2
+                print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
             else:
-                print(f"OTHER: {lather} ({tlc.id} by {tlc.author})")
+                print(f'No match against "{lather.lather}" in {tlc.id} by {tlc.author}')
     else:
-        # duplicate of not maker above
         result = makers.searchMaker(tlc.body)
         if result:
-            #lather = result['match'].group(0)
-            maker = result['name']
-            scent = result['match'].group(1)
-            confidence += 1
-            if result['first']:
-                confidence += 2
-            if not result['abbreviated']:
-                confidence += 1
-            # duplicate for now; not ready to merge into a single branch
-            if maker and not scent:
-                single = scents.getSingleScent(maker)
-                if single:
-                    # single known scent
-                    confidence += 1
-                    scent = single
-                else:
-                    # TODO if not result['first'], look before maker
-                    confidence -= 1
-                    if not result['first']:
-                        nlpos = tlc.body.rfind("\n", 0, result['match'].start())
-                        scent = tlc.body[nlpos + 1:result['match'].start()]
-
-            # some people make it possessive
-            result = possessive_pattern.match(scent)
-            if result and not str.isspace(maker[-1]):
-                scent = scent[result.end():]
-
-            scent = scent.strip()
-            lpos = scent.find('](')
-            if lpos > 0:
-                bpos = scent.find('[', 0, lpos)
-                if bpos > 0:
-                    scent = scent[0:bpos]
-                elif bpos == 0:
-                    scent = scent[1:lpos]
-                else:
-                    scent = scent[0:lpos]
-            
-            result = separator_pattern.match(scent)
-            if result:
-                scent = scent[result.end():]
-            
-            result = type_suffix_pattern.search(scent)
-            if result:
-                confidence += 3
-                scent = scent[0:result.start()]
-            
-            scent = scent.strip()
-
-            # now, finally
-            result = scents.matchScent(maker, scent)
-            if result:
-                confidence += 2
-                scent = result['name']
+            # TODO need to better handle <scent>{-|by|from}<maker>
+            lather.lather = result['match'].group(0)
+            lather.maker = result['name']
+            lather.scent = result['match'].group(1)
+            if result['abbreviated']:
+                lather.context += 'O'
+                lather.confidence += 2
             else:
-                scent = removeMarkdown(scent.strip()).title()
-
-            if not silent:
-                if resolved:
-                    print(f"Matched on '{maker}' / '{scent}' from {tlc.author} ({confidence}; {tlc.id})")
-                elif maker and scent:
-                    print(f"Resolved '{maker}' / '{scent}' ({confidence}; {tlc.id} by {tlc.author})")
-                else:
-                    print(f"OTHER: {lather} ({tlc.id} by {tlc.author})")
-        elif not silent:
-            print(f"FAILED TO MATCH LATHER IN {tlc.id} by {tlc.author}")
-    # TODO else try primary maker patterns
-    # ... do we need division between primary and abbreviated?
-    # or could we try to match known scent and known maker?
-
-    full_lather = lather
-    if lm:
-        full_lather = lm.group(0)
-    return {
-        'lather': full_lather,
-        'maker': maker,
-        'scent': scent,
-        'known_maker': resolved,
-        'confidence': int(confidence * 100 / confidence_max),
-        'plaintext': mnlpat.sub("\n", re.sub("^\n+", '', tagpat.sub('', ppat.sub("\n", tlc.body_html))))
-    }
+                lather.context += 'N'
+                lather.confidence += 3
+            if not result['first']:
+                lather.confidence -= 2
+        if lather.scent:
+            cleanAndMatchScent(lather)
+        if lather.maker:
+            print(f'Body match "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
+        else:
+            result = scentFirst(tlc.body, None)
+            if result:
+                lather.lather = result['lather']
+                lather.maker = result['maker']
+                lather.scent = result['scent']
+                lather.context += 'S'
+                lather.confidence += 2
+                print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
+            else:
+                print(f'No lather in {tlc.id} by {tlc.author}')
+    if lmr:
+        lather.lather = lmr.group(0).strip()
+    return lather
 
 
 def saveCommentData( post, cmtFilename ):

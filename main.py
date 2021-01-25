@@ -76,8 +76,7 @@ def postLoop():
         post_proc_count += 1
         if arg_mode == Mode.INCREMENTAL:
             # getThreadComments() saves data
-            scanner.getThreadComments(post, post_date)
-            print(f"Processed {post.title}.")
+            scanner.getThreadComments(post, post_date, True)
         elif arg_mode == Mode.COMPILE:
             comment_count = 0
             for cmt in scanner.getThreadComments(post, post_date):
