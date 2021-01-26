@@ -358,7 +358,7 @@ _scent_pats = {
         'what the puck[\W]*\\s+blue': 'Blue Barbershop',
      },
 
-    'Red House Farms': { 
+    'Red House Farm': { 
         'cedar[^\w]+lime': 'Cedar-Lime',
         'barbershop': 'Barbershop 1920',
         _apostophe + 'tis the saison': '\'Tis the Saison',

@@ -18,7 +18,7 @@ lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         (?:shave\\b)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shaving (?:soap|cream)|soap|cream|(?:soap\\s*|)sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
+type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shav(?:ing|e) (?:soap|cream)|soap|cream|(?:soap\\s*|)sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\|)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
@@ -251,10 +251,7 @@ def cleanAndMatchScent( lather: LatherMatch ):
 
 
 def scanBody( tlc, silent = False ):
-    """ Returns a dict with the following members:
-          lather: looks like the lather line in the post
-          maker: soapmaker, if found
-          scent: scent name, if found
+    """ Always returns a LatherMatch object.
     """
     lather = LatherMatch(body_html=tlc.body_html)
     # L if lather; [MNO] for maker, [B][1XYS] for scent
