@@ -45,8 +45,8 @@ _maker_pats = {
 
     'barbus\\b': 'Barbus',
 
-    'b\\s*(?:&(?:amp;|)|\\+|a)\\s*m' + _any_and + 'zingari\\s*(?:man|)': 'Zingari Man',
-    'barrister' + _any_and + 'mann' + _any_and + 'zingari(?: man)': 'Zingari Man',
+    'b\\s*(?:&(?:amp;|)|\\+|a)\\s*m' + _any_and + 'zingari(?: man|)': 'Zingari Man',
+    'barrister' + _any_and + 'mann' + _any_and + 'zingari(?: man|)': 'Zingari Man',
     'barri?sters?' + _any_and + 'mann?': 'Barrister and Mann',
     'barrister' + _apostophe + 's? (?=reserve)': 'Barrister and Mann',
 
@@ -226,6 +226,8 @@ _maker_pats = {
 
     'lakewood soap' + _opt_company: 'Lakewood Soap Company',
 
+    'lather bro(?:thers|s)\\.?': 'Lather Bros.',
+
     'like grandpa': 'Like Grandpa',
 
     'lisa' + _apostophe + 's natural herbal creations': 'Lisa\'s Natural Herbal Creations',
@@ -391,6 +393,9 @@ _maker_pats = {
 
     'summer break(?: soaps|)': 'Summer Break Soaps',
 
+    'svoboda': 'Svoboda',
+    'свобода': 'Svoboda',
+
     '@talbotshaving @maolgrooming': 'Talbot Shaving',
     '@talbotshaving': 'Talbot Shaving',
     'talbot\\s*(?:shaving|)': 'Talbot Shaving',
@@ -528,7 +533,8 @@ _abbrev_pats = {
     'wms': 'William\'s Mug Soap',
     # hardware vendors
     'aos': 'Art of Shaving',
-    'dg(?:/CL|)': 'Declaration Grooming',
+    'dg' + _any_and + 'cl': 'Declaration Grooming',
+    'dg': 'Declaration Grooming',
     'fine': 'Fine Accoutrements',
     'n\\.?\\s*o\\.?': 'Noble Otter',
     'paa': 'Phoenix Artisan Accoutrements',
@@ -542,7 +548,7 @@ _abbrev_pats = {
 # TODO special category for more complicated patterns,
 # e.g. 'wms\\s*[_\*]*\\s*$' for Williams (single scent makes misidentification more likely)
 
-_ending = '\\.?\\s*(.*)'
+_ending = '(?:\\.|' + _apostophe + 's|)\\s*(.*)'
 _compiled_pats = None
 _compiled_hw = None
 _compiled_other = None
