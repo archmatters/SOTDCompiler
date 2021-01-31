@@ -20,9 +20,9 @@ lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shav(?:ing|e) (?:soap|cream)|soap|cream|(?:soap\\s*|)sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 # applied to markdown, hence the backslash
-separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\|)\\s*')
+separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\||–)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
-by_pattern = re.compile('(.*) by\\s*$', re.IGNORECASE)
+by_pattern = re.compile('(.*?)\\s+(?:by|from)\\s*$', re.IGNORECASE)
 sample_pattern = re.compile('\\s*\\(sample(?: size|)\\)\\s*$', re.IGNORECASE)
 quoted_pattern = re.compile('\\s*(["\'])(.*)\\1\\s*')
 
@@ -52,6 +52,7 @@ class LatherMatch:
 
     def getConfidenceText( self ):
         return str(self.confidence) + '.' + self.context
+
 
 def getSOTDDate( post ):
     sotd_match = sotd_pattern.search(post.title)
@@ -216,9 +217,17 @@ def cleanAndMatchScent( lather: LatherMatch ):
 
     text = removeMarkdown(text)
 
-    result = separator_pattern.match(text)
-    if result:
-        text = text[result.end():]
+    lpos = 0
+    while lpos < len(text):
+        result = separator_pattern.search(text, lpos)
+        if result:
+            if result.start() == 0:
+                text = text[result.end():]
+            elif result.end() == len(text):
+                text = text[0:result.start()]
+            lpos = result.end()
+        else:
+            lpos = len(text)
 
     text = text.strip()
     if text.endswith('.') or text.endswith(','):
@@ -288,8 +297,13 @@ def scanBody( tlc, silent = False ):
                 else:
                     lather.context += 'N'
                     lather.confidence += 2
-                if not lather.scent:
-                    lather.scent = lather.lather[0:result['match'].start()].strip()
+                pretext = lather.lather[0:result['match'].start()].strip()
+                result = by_pattern.match(pretext)
+                if result:
+                    lather.scent = result.group(1)
+                    lather.context += 'B'
+                elif not lather.scent:
+                    lather.scent = pretext
                     lather.context += 'B'
 
         if lather.scent:

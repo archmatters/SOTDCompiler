@@ -2,7 +2,7 @@
 
 import re
 
-_any_and = '\\s*(?:&(?:amp;|)|and|\+|/|×|x)\\s*'
+_any_and = '\\s*(?:&(?:amp;|)|and|\+|/|×|x|-)\\s*'
 _apostophe = '(?:\'|&#39;|’|)'
 _opt_company = '\\s*(?:company|co\\.?|)\\s*'
 
@@ -85,8 +85,8 @@ _maker_pats = {
 
     'central texas (?:soaps?|)': 'Central Texas Soaps',
 
-    'chicago groom\\w+' + _opt_company + '(?:\\((?:form(?:er|al)ly\\s+|)oleo\\b[^)]*\\)|)' + _any_and + 'wcs': 'West Coast Shaving',
-    'chicago groom\\w+' + _opt_company + '(?:\\((?:formerly|formally\\s+|)oleo\\b[^)]*\\)|)': 'Chicago Grooming Co.',
+    'chicago groom\\w+' + _opt_company + '(?:\\((?:form(?:er|al)ly|)\\s*oleo\\b[^)]*\\)|)' + _any_and + 'wcs': 'West Coast Shaving',
+    'chicago groom\\w+' + _opt_company + '(?:\\((?:formerly|formally|)\\s*oleo\\b[^)]*\\)|)': 'Chicago Grooming Co.',
     'oleo\\s*(?:soapworks|soap|)': 'Chicago Grooming Co.',
 
     'zoologist(?: perfumes|)\\s*/\\s*chiseled face': 'Chiseled Face',
@@ -144,7 +144,7 @@ _maker_pats = {
     'jabon\\s*man eufros': 'Eufros',
     'eufu?ros': 'Eufros',
 
-    'extr[òo](?: cosmesi|\\b)': 'Extrò Cosmesi',
+    'extr[òo]’?(?: cosmesi|\\b)': 'Extrò Cosmesi',
 
     'executive shaving': 'Executive Shaving',
 
@@ -290,7 +290,7 @@ _maker_pats = {
     'obsessive soap(?:s|\\s+perfect\w+|)': 'Obsessive Soap Perfectionist',
     'osp(?:\\s*soaps?|\\b)': 'Obsessive Soap Perfectionist',
 
-    'l' + _apostophe + 'occitane': 'L\'Occitane',
+    'l' + _apostophe + 'occitane': 'l\'Occitane',
 
     'officina di (?:santa maria|s\\.?m\\.?) novella': 'Officina di Santa Maria Novella',
     'santa maria novella': 'Officina di Santa Maria Novella',
@@ -335,7 +335,8 @@ _maker_pats = {
 
     'razor emporium': 'Razor Emporium',
 
-    'red house farms?(?: \\(u?/?grindermonk' + _apostophe + 's?\\)|)': 'Red House Farm',
+    'red house farms?\\s*\\(\\s*\\[u/grindermonk\\]\\([^\\)]+\\)+' + _apostophe + 's?\\)?': 'Red House Farm',
+    'red house farms?(?: \\(\\s*u?/?grindermonk\\)?' + _apostophe + 's?\\)|)': 'Red House Farm',
     '(?:u/|)grindermonk' + _apostophe + 's?': 'Red House Farm',
 
     'reef point(?: soaps?|)': 'Reef Point Soaps',
@@ -548,7 +549,7 @@ _abbrev_pats = {
 # TODO special category for more complicated patterns,
 # e.g. 'wms\\s*[_\*]*\\s*$' for Williams (single scent makes misidentification more likely)
 
-_ending = '(?:\\.|' + _apostophe + 's|)\\s*(.*)'
+_ending = '(?:\\.|' + _apostophe + '(?<! )s|)\\s*(.*)'
 _compiled_pats = None
 _compiled_hw = None
 _compiled_other = None
