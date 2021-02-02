@@ -54,7 +54,7 @@ class LatherMatch:
         return str(self.confidence) + '.' + self.context
 
 
-def getSOTDDate( post ):
+def get_sotd_date( post ):
     sotd_match = sotd_pattern.search(post.title)
     if not sotd_match:
         return None
@@ -103,49 +103,6 @@ def getSOTDDate( post ):
         return datetime.date(year, month, day)
     else:
         return None
-
-
-def getThreadComments( post, post_date, verbose = False ):
-    """ Returns a list of top-level comments, using local file cache if available.
-        If this post is present in the file cache, comments will be loaded from that
-        file.  Otherwise, we will load all top-level comments from Reddit and persist
-        them in the file cache.  Future calls for the same post will use that file
-        unless it is deleted.
-            post: the Reddit post object
-            post_date: a datetime.date object, from the post title;
-                       this is used to name the cache file
-    """
-    # if saved data file exists, load comments from there instead of making a Reddit call
-    Path('postdata').mkdir(exist_ok = True)
-    cmtFilename = f"postdata/{post_date.strftime('%Y-%m-%d')}-{post.id}.json"
-    if Path(cmtFilename).exists():
-        with open(file = cmtFilename, mode = 'r', encoding = 'utf8') as cmtFile:
-            jscoms = json.load(cmtFile).get("comments")
-            rdcoms = [ ]
-            for cmt in jscoms:
-                if not cmt['author']:
-                    cmt['author'] = '[deleted]'
-                rdcoms.append(praw.reddit.models.Comment(reddit='Reddit', _data=cmt))
-            if verbose:
-                print(f"Loaded cache for {post.title}.")
-            return rdcoms
-
-    # ensure all top level comments are loaded
-    complete = False
-    while not complete:
-        complete = True
-        for tlc in post.comments:
-            if isinstance(tlc, praw.models.MoreComments):
-                complete = False
-                post.comments.replace_more(limit=None)
-                break
-
-    # save comments so we can quickly rescan during development (see above load)
-    saveCommentData(post, cmtFilename)
-    if verbose:
-        print(f"Processed {post.title}.")
-    
-    return post.comments
 
 
 def removeMarkdown( text: str ):
@@ -361,32 +318,6 @@ def scanBody( tlc, silent = False ):
     return lather
 
 
-def saveCommentData( post, cmtFilename ):
-    with open(file = cmtFilename, mode = 'w', encoding = 'utf8') as cmtFile:
-        comment_count = 0
-        cmtFile.write('{"comments": [\n')
-        for tlc in post.comments:
-            comment_count += 1
-            author_name = None
-            if tlc.author:
-                author_name = tlc.author.name
-            map = {
-                'author': author_name,
-                'body': tlc.body,
-                'body_html': tlc.body_html,
-                'created_utc': tlc.created_utc,
-                'id': tlc.id,
-                'link_id': tlc.link_id,
-                'parent_id': tlc.parent_id,
-                'permalink': tlc.permalink,
-                'saved': tlc.saved,
-                'score': tlc.score,
-                'subreddit_id': tlc.subreddit_id
-            }
-            if comment_count > 1:
-                cmtFile.write(",\n")
-            cmtFile.write(json.dumps(map))
-        cmtFile.write("\n]}")
 
 
 not_cap_pattern = re.compile('(?:a|the|and|in|of|on|for|from|at|to|as|so|into|s|y|la|le|l|n)$', re.IGNORECASE)

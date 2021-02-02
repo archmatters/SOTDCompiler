@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-from datetime import date
+import json
+from datetime import date, timedelta
 from enum import Enum
+from pathlib import Path
 
 import praw
 
@@ -28,14 +30,12 @@ elif args.command in [ 'inc', 'incremental' ]:
 else:
     raise SystemExit(f"Invalid command \"{args['command']}\" specified.")
 
-sotd_month = date.today().month
+# default to last month
+sotd_month = date.today().month - 1
 sotd_year = date.today().year
-if arg_mode == Mode.COMPILE:
-    # default to last month
-    sotd_month -= 1
-    if sotd_month < 1:
-        sotd_month = 12
-        sotd_year -= 1
+if sotd_month < 1:
+    sotd_month = 12
+    sotd_year -= 1
 
 if args.month:
     if len(args.month) > 5 and len(args.month) < 8:
@@ -55,34 +55,153 @@ if args.month:
         raise SystemExit(f"{aparser.prog}: error: '{args.month}' is in the future!")
 
 
-def postLoop():
+def get_cached_comments( post_id: str, post_date: date ):
+    """ If the given post ID with the given date is found in the cache, the
+        list of comments is returned.  Otherwise None is returned.
+    """
+    # note the filename generation MUST match save_comments_to_cache()!
+    filename = f"postdata/{post_date.strftime('%Y-%m-%d')}-{post_id}.json"
+    if Path(filename).exists():
+        with open(file = filename, mode = 'r', encoding = 'utf8') as comments_file:
+            try:
+                jscoms = json.load(comments_file).get('comments')
+            except Exception as e:
+                print(f"Error loading cache file {filename}: {e}")
+                return None
+            rdcoms = [ ]
+            for cmt in jscoms:
+                if not cmt['author']:
+                    cmt['author'] = '[deleted]'
+                rdcoms.append(praw.reddit.models.Comment(reddit='Reddit', _data=cmt))
+            return rdcoms
+    return None
+
+
+def save_comments_to_cache( post_id: str, post_date: date, comments ):
+    """ Saves the given collection of comments to the file cache.  This will
+        overwrite any existing cache for the post.
+    """
+    # note the filename generation MUST match get_cached_comments()!
+    filename = f"postdata/{post_date.strftime('%Y-%m-%d')}-{post_id}.json"
+    Path('postdata').mkdir(exist_ok = True)
+    with open(file = filename, mode = 'w', encoding = 'utf8') as comment_file:
+        comment_count = 0
+        comment_file.write('{"comments": [\n')
+        for tlc in comments:
+            comment_count += 1
+            author_name = None
+            if tlc.author:
+                author_name = tlc.author.name
+            map = {
+                'author': author_name,
+                'body': tlc.body,
+                'body_html': tlc.body_html,
+                'created_utc': tlc.created_utc,
+                'id': tlc.id,
+                'link_id': tlc.link_id,
+                'parent_id': tlc.parent_id,
+                'permalink': tlc.permalink,
+                'saved': tlc.saved,
+                'score': tlc.score,
+                'subreddit_id': tlc.subreddit_id
+            }
+            if comment_count > 1:
+                comment_file.write(',\n')
+            comment_file.write(json.dumps(map))
+        comment_file.write('\n]}')
+
+
+def ensure_loaded( post: praw.models.Submission ):
+    """ Returns a list of all top-level comments in the given submission.
+        Reddit does not guarantee all top-level comments are loaded; this
+        function will.
+    """
+    complete = False
+    while not complete:
+        complete = True
+        for tlc in post.comments:
+            if isinstance(tlc, praw.models.MoreComments):
+                complete = False
+                post.comments.replace_more(limit=None)
+                break
+
+
+def update_cache_comments( cached: list, reddit_comments ):
+    """ Adds any missing comments to the cached list, from the Reddit comments
+        collection.  Returns True if the list was added to, or False if not.
+    """
+    updated = False
+    for comment in reddit_comments:
+        found = False
+        for cc in cached:
+            if cc.id == comment.id:
+                found = True
+                break
+        if not found:
+            cached.append(comment)
+            updated = True
+    return updated
+
+# if incremental: loop over posts until you go back one week, or two days prior to last known
+# TODO see if new comments have been posted
+# if compile: visit all posts in one month
+def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
     post_count = 0
     post_proc_count = 0
-    for post in subs00:
+    inc_limit = date.today() - timedelta(days=7)
+    last_inc_loaded = None
+    for post in subreddit.new(limit=None):
         post_count += 1
-        post_date = scanner.getSOTDDate(post)
+        post_date = scanner.get_sotd_date(post)
         if not post_date:
             continue
-        if (post_date.month < sotd_month and post_date.year == sotd_year) or post_date.year < sotd_year:
-            print('Complete.')
-            break
-        if post_date.month != sotd_month or post_date.year != sotd_year:
-            print(f'Skipping thread {post.title}; wrong month.')
-            continue
-        if arg_mode == Mode.INCREMENTAL and (date.today() <= post_date):
-            print(f'Skipping thread {post.title}; same day may not be complete.')
-            continue
-
-        post_proc_count += 1
-        if arg_mode == Mode.INCREMENTAL:
-            # getThreadComments() saves data
-            scanner.getThreadComments(post, post_date, True)
-        elif arg_mode == Mode.COMPILE:
+        if mode == Mode.INCREMENTAL:
+            if post_date >= date.today():
+                print(f'Skipping thread {post.title}; too recent and it may not be complete.')
+                continue
+            #elif post_date >= inc_limit:
+                # TODO merge
+            elif post_date <= inc_limit and (not last_inc_loaded or (last_inc_loaded
+                        and post_date < last_inc_loaded - timedelta(days=3))):
+                print('Looks like we\'re finished loading.')
+                break
+            else:
+                comments = get_cached_comments(post.id, post_date)
+                if comments:
+                    ensure_loaded(post)
+                    if update_cache_comments(comments, post.comments):
+                        print(f"Found new/updated comments in {post.title}.")
+                        last_inc_loaded = post_date
+                        save_comments_to_cache(post.id, post_date, comments)
+                    else:
+                        print(f"Loaded cache for {post.title}.")
+                else:
+                    post_proc_count += 1
+                    ensure_loaded(post)
+                    save_comments_to_cache(post.id, post_date, post.comments)
+                    last_inc_loaded = post_date
+                    print(f"Saved {len(post.comments)} comments from {post.title}.")
+        elif mode == Mode.COMPILE:
+            if post_date.year < sotd_year or (post_date.month < sotd_month
+                    and post_date.year == sotd_year):
+                print('Complete.')
+                break
+            elif post_date.month != sotd_month or post_date.year != sotd_year:
+                print(f'Skipping thread {post.title}; wrong month.')
+                continue
             comment_count = 0
-            for cmt in scanner.getThreadComments(post, post_date):
+            comments = get_cached_comments(post.id, post_date)
+            if not comments:
+                ensure_loaded(post)
+                comments = post.comments
+                save_comments_to_cache(post.id, post_date, comments)
+            post_proc_count += 1
+            for cmt in comments:
                 comment_count += 1
                 scanner.scanComment(cmt, post_date, dataFile)
             print(f"Processed {comment_count} comments in {post.title}.")
+        else:
+            raise SystemExit(f"Unknown mode '{mode}'")
 
     print(f"Saw {post_count} posts, processed {post_proc_count}.")
 
@@ -90,11 +209,10 @@ def postLoop():
 # credentials & agent read from praw.ini
 reddit = praw.Reddit(site_name = 'SOTDScanner')
 wssub = reddit.subreddit('Wetshaving')
-subs00 = wssub.new( limit = None )
 
 if arg_mode == Mode.COMPILE:
     with open(file = 'sotd-{:0>4}-{:0>2}.csv'.format(sotd_year, sotd_month),
             mode = 'w', encoding = 'utf8') as dataFile:
-        postLoop()
+        do_the_work(wssub, arg_mode)
 elif arg_mode == Mode.INCREMENTAL:
-    postLoop()
+    do_the_work(wssub, arg_mode)
