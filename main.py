@@ -2,7 +2,7 @@
 
 import argparse
 import json
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from enum import Enum
 from pathlib import Path
 
@@ -94,10 +94,11 @@ def save_comments_to_cache( post_id: str, post_date: date, comments ):
                 author_name = tlc.author.name
             map = {
                 'author': author_name,
+                'id': tlc.id,
                 'body': tlc.body,
                 'body_html': tlc.body_html,
                 'created_utc': tlc.created_utc,
-                'id': tlc.id,
+                'edited': tlc.edited,
                 'link_id': tlc.link_id,
                 'parent_id': tlc.parent_id,
                 'permalink': tlc.permalink,
@@ -150,7 +151,7 @@ def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
     post_proc_count = 0
     inc_limit = date.today() - timedelta(days=7)
     last_inc_loaded = None
-    for post in subreddit.new(limit=None):
+    for post in subreddit.hot(limit=None):
         post_count += 1
         post_date = scanner.get_sotd_date(post)
         if not post_date:
@@ -162,7 +163,7 @@ def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
             #elif post_date >= inc_limit:
                 # TODO merge
             elif post_date <= inc_limit and (not last_inc_loaded or (last_inc_loaded
-                        and post_date < last_inc_loaded - timedelta(days=3))):
+                        and post_date < last_inc_loaded - timedelta(days=7))):
                 print('Looks like we\'re finished loading.')
                 break
             else:
