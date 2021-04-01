@@ -15,10 +15,14 @@ _scent_pats = {
         'matteo$': 'Matteo 9,11',
         'garibaldi$': 'Garibaldi',
         'monet$': 'Monet',
-        'buttero$': 'Buttero'
+        'buttero$': 'Buttero',
     },
 
-    'Acqua di Parma': {},
+    'Acqua di Parma': {
+        'barbiere$': 'Barbiere',
+        'Barbiere Crema Soffice da Pennello': 'Barbiere',
+        'Barbiere Crema Soffice': 'Barbiere',
+    },
 
     'Apex Alchemy Soaps': {
         'American Pi': 'American Pi',
@@ -36,7 +40,7 @@ _scent_pats = {
         'st\\.? bart' + _apostophe + 's': 'St. Barts',
         'peach(?:es|)' + _any_and + 'cognac': 'Peach & Cognac',
         'which one' + _apostophe + 's pink\\??': 'Which One\'s Pink?',
-        'grecian horse': 'Grecian Horse',
+        'grecian(?: horse|)$': 'Grecian Horse',
         'spartacus': 'Spartacus',
         '\\(?\\s*little fictions\\s*\\)?(?:' + _any_and + 'gr[ea]y matter|)': 'Little Fictions',
         'vanille de tabac': 'Vanille de Tabac',
@@ -50,6 +54,7 @@ _scent_pats = {
         'chasing the dragon': 'Chasing the Dragon',
         'l' + _apostophe + 'orange verte': 'l\'Orange Verte',
         '^strawberry fields$': 'Strawberry Fields',
+        'forb+id+en fruit': 'Forbidden Fruit',
         # The Club brand
         'the kingdom': 'The Kingdom',
         'charlatan' + _apostophe + 's traipse': 'Charlatans Traipse',
@@ -66,6 +71,12 @@ _scent_pats = {
         'raconteur': 'Raconteur',
         'foug[èeé]re trois': 'Fougère Trois',
         # TODO special rules for Carnivale and Fresca Intensa
+        # which are made under the Storybook Soapworks brand
+    },
+
+    'Aveeno': {
+        'positively smooth (?:shave |)gel': 'Positively Smooth',
+        'ther[ae]pe?utic (?:shave |)gel': 'Therapeutic',
     },
 
     'Barbasol': {
@@ -99,12 +110,12 @@ _scent_pats = {
         'lavanille': 'Lavanille',
         'first snow': 'First Snow',
         # reserve
-        'waves$': 'Reserve Waves',
+        'waves(?: reserve(?: base|)|)$': 'Reserve Waves',
         'spice(?: reserve(?: base|)|)$': 'Reserve Spice',
-        'fern$': 'Reserve Fern',
-        'lavender$': 'Reserve Lavender',
+        'fern(?: reserve(?: base|)|)$': 'Reserve Fern',
+        'lavender(?: reserve(?: base|)|)$': 'Reserve Lavender',
         'cool(?: reserve(?: base|)|)$': 'Reserve Cool',
-        'classic$': 'Reserve Classic',
+        'classic(?: reserve(?: base|)|)$': 'Reserve Classic',
         # latha?
         'latha osmanthus': 'Latha Osmanthus',
         'latha taiga': 'Latha Taiga',
@@ -134,6 +145,12 @@ _scent_pats = {
         'Islamorada': 'Islamorada',
         'Mannish Boy': 'Mannish Boy',
         'North York': 'North York',
+    },
+
+    'Bundubeard': {
+        'original$': 'Original',
+        'rose en bos': 'Rose en Bos',
+        'rolling rooibos': 'Rolling Rooibos',
     },
 
     'C.O. Bigelow': {},
@@ -425,7 +442,7 @@ _scent_pats = {
 
     'Hub City Soap Company': {},
 
-    'Institut Karité': { '', 'Shaving Soap' },
+    'Institut Karité': { '': 'Shaving Soap' },
 
     'Los Jabones de Joserra': {
         'brihuega': 'Brihuega',
@@ -500,6 +517,11 @@ _scent_pats = {
         'orbit$': 'Orbit',
         'monarch$': 'Monarch',
         'bare$': 'Bare',
+    },
+
+    'l\'Occitane': {
+        'cade$': 'Cade',
+        'cedrat(?: gel|)$': 'Cedrat',
     },
 
     'Ogallala Bay Rum': {
@@ -613,8 +635,6 @@ _scent_pats = {
         'dolomiti$': 'Dolomiti',
     },
 
-    'Seaforth!': {},
-
     'Shannon\'s Soaps': {
         'barber\\s*shop': 'Barbershop',
         'pina colada': 'Piña Colada',
@@ -645,7 +665,9 @@ _scent_pats = {
 
     'Spearhead Shaving Company': {
         'seaforth!? "?heather"?': 'Seaforth! Heather',
+        'heather$': 'Seaforth! Heather',
         'seaforth!? "?spiced"?': 'Seaforth! Spiced',
+        'spiced$': 'Seaforth! Spiced',
     },
 
     'Stirling Soap Co.': {
@@ -741,6 +763,11 @@ _scent_pats = {
         'aquae\\s*[23]?$': 'Aquae',
         'fructi\\s*[23]?$': 'Fructi',
         'herbae\\s*[23]?$': 'Herbae',
+    },
+
+    'Vicco': {
+        'turmeric': 'Turmeric',
+        'S with sandalwood oil': 'Turmeric S with Sandalwood Oil'
     },
 
     'Vitos': {
