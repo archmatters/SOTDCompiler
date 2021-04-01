@@ -106,6 +106,8 @@ def save_comments_to_cache( post_id: str, post_date: date, comments ):
                 'score': tlc.score,
                 'subreddit_id': tlc.subreddit_id
             }
+            if tlc.edited:
+                map['edited'] = tlc.edited
             if comment_count > 1:
                 comment_file.write(',\n')
             comment_file.write(json.dumps(map))
