@@ -3,10 +3,142 @@
 import re
 
 _simple_cream_soap_pat = re.compile('^(?:shav(?:ing|e) |)(?:soap|cream)$')
+_any_pattern = re.compile('.*')
 
-_apostophe = '(?:\'|&#39;|’|)'
+_apostrophe = '(?:\'|&#39;|’|)'
 _any_and = '\\s*(?:&(?:amp;|)|and|\+)\\s*'
-_ending = '[\\.,]?'
+_prefix = '\\b'
+_suffix = '\\b[\\.,]?'
+
+_unique_names = { }
+
+class Sniffer:
+    """ A class to handle scent matching.
+
+    + `default_scent`: if this maker has a 'default' scent, this is its name.
+    + `lowpatterns`: low confidence patterns, only used after maker is known.
+    + `patterns`: high confidence patterns, used whether or not maker is known.
+    + `bases`: base names not part of scent name.
+    + `custom`: function for custom work after a successful match.
+    """
+
+    def __init__( self, *, default_scent: str = None,
+            lowpatterns: dict = None, patterns: dict = None,
+            bases: list = None, custom = None ):
+        # TODO this is set in _compile_all(), so we can just use the map key
+        self.makername = None
+        self.lowpatterns = { }
+        self.highpatterns = { }
+        self.bases = [ ]
+        self.namecount = 0
+        if default_scent:
+            self.default_scent = default_scent
+        else:
+            self.default_scent = None
+        if custom:
+            self.custom = custom
+        else:
+            self.custom = None
+        self._compile(lowpatterns, patterns, bases)
+    
+    
+    def _compile( self, lowpatterns: dict, highpatterns: dict, bases: list ):
+        allnames = [ ]
+        if lowpatterns:
+            for pat in lowpatterns:
+                self.lowpatterns[re.compile(_prefix + pat + _suffix,
+                        re.IGNORECASE)] = lowpatterns[pat]
+                if lowpatterns[pat] not in allnames:
+                    allnames.append(lowpatterns[pat])
+        if highpatterns:
+            for pat in highpatterns:
+                finalpat = pat
+                if pat[0] != '^':
+                    finalpat = _prefix + finalpat
+                if pat[-1] != '$':
+                    finalpat = finalpat + _suffix
+                self.highpatterns[re.compile(finalpat, re.IGNORECASE)] = highpatterns[pat]
+                if highpatterns[pat] not in allnames:
+                    allnames.append(highpatterns[pat])
+        self.namecount = len(allnames)
+        if self.namecount == 0 and self.default_scent:
+            self.namecount = 1
+        global _unique_names
+        for name in allnames:
+            if name not in _unique_names:
+                _unique_names[name] = 1
+            else:
+                _unique_names[name] += 1
+        if bases:
+            for name in bases:
+                bpat = '\\b' + name + '(?:\\s+base\\b|\\b)'
+                self.bases.append(re.compile(
+                        '\\s*(?:\\(' + bpat + '\\)|(?:in |[:,]\\s*)' + bpat + ')\\s*',
+                        re.IGNORECASE))
+
+
+    def strip_base( self, text: str ):
+        if not self.bases:
+            return text
+        for pattern in self.bases:
+            stripped = None
+            pos = 0
+            while pos < len(text):
+                result = pattern.search(text, pos)
+                if result and result.start() == 0:
+                    stripped = text[result.end():].strip()
+                    break
+                elif result and result.end() == len(text):
+                    stripped = text[0:result.start()].strip()
+                    break
+                elif result:
+                    pos = result.end()
+                else:
+                    pos = len(text)
+            if stripped:
+                return stripped
+        return text
+
+
+    def is_single_scent( self ):
+        return self.namecount == 1
+    
+
+    def get_default_scent( self ):
+        return self.default_scent
+
+
+    # can use low confidence patterns
+    # return "Definitive Scent Name"
+    def match_on_maker( self, text: str ):
+        text = text.strip()
+        if not text and self.default_scent:
+            result = _any_pattern.match(text)
+            return { 'result': result, 'name': self.get_default_scent() }
+
+        for pattern in self.highpatterns:
+            result = pattern.match(text)
+            if not result:
+                result = pattern.search(text)
+            if result:
+                return { 'result': result, 'name': self.highpatterns[pattern] }
+                
+        for pattern in self.lowpatterns:
+            result = pattern.match(text)
+            if result:
+                return { 'result': result, 'name': self.lowpatterns[pattern] }
+        for pattern in self.lowpatterns:
+            result = pattern.search(text)
+            if result:
+                return { 'result': result, 'name': self.lowpatterns[pattern] }
+                
+        return None
+    
+
+    # will not use low confidence patterns
+    # return { 'maker': 'Maker Name', 'scent': 'Scent Name', 'lather': 'Lather text' }
+    def match_unknown( self, full_text: str ):
+        return None
 
 _scent_pats = {
     'Abbate y la Mantia': {
@@ -97,38 +229,46 @@ _scent_pats = {
         'active': 'Active',
     },
 
-    'Barrister and Mann': {
-        'seville': 'Seville',
-        'eigengrau': 'Eigengrau',
-        '[\\w\\s]*grande? chypre.*': 'Le Grand Chypre',
-        'dickens,?\\s+revis': 'Dickens, Revisited',
-        'oh?' + _apostrophe + ',?\\s*delight': 'O, Delight!',
-        'brew?[\\- ]ha': 'Brew Ha-Ha',
-        'hallow': 'Hallows',
-        'paganini': 'Paganini\'s Violin',
-        'levian?than': 'Leviathan',
-        'beaudelaire': 'Beaudelaire',
-        'foug[èeé]re gothi': 'Fougère Gothique',
-        'foug[èeé]re angel': 'Fougère Angelique',
-        'behold the whatsis!?': 'Behold the Whatsis!',
-        'dfs (?:2017|exclusive)': 'DFS 2017 LE',
-        'le grand (?:cyphre|chypre)': 'Le Grand Chypre',
-        '(?:motherfuckin(?:\'|g)|mf) roam': 'Roam',
-        'lavanille': 'Lavanille',
-        'first snow': 'First Snow',
-        '(?:cologne|colonge|colnge) russe': 'Cologne Russe',
-        '(?:the |the full |)measure of (?:a |)man': 'The Full Measure of Man',
-        # reserve
-        'waves(?: reserve(?: base|)|)$': 'Reserve Waves',
-        'spice(?: reserve(?: base|)|)$': 'Reserve Spice',
-        'fern(?: reserve(?: base|)|)$': 'Reserve Fern',
-        'lavender(?: reserve(?: base|)|)$': 'Reserve Lavender',
-        'cool(?: reserve(?: base|)|)$': 'Reserve Cool',
-        'classic(?: reserve(?: base|)|)$': 'Reserve Classic',
-        # latha?
-        'latha osmanthus': 'Latha Osmanthus',
-        'latha taiga': 'Latha Taiga',
-    },
+    'Barrister and Mann': Sniffer(
+        patterns={
+            'seville': 'Seville',
+            'eigengrau': 'Eigengrau',
+            '[\\w\\s]*grande? chypre.*': 'Le Grand Chypre',
+            'dickens,?\\s+revisited': 'Dickens, Revisited',
+            'oh?' + _apostrophe + ',?\\s*delight': 'O, Delight!',
+            'brew?(?:-| |)ha': 'Brew Ha-Ha',
+            'hallows?': 'Hallows',
+            'paganini' + _apostrophe + 's violin': 'Paganini\'s Violin',
+            'levian?than': 'Leviathan',
+            'beaudelaire': 'Beaudelaire',
+            'foug[èeé]re gothi\w+': 'Fougère Gothique',
+            'foug[èeé]re angel\w+': 'Fougère Angelique',
+            'behold the whatsis!?': 'Behold the Whatsis!',
+            'dfs (?:2017|exclusive)': 'DFS 2017 LE',
+            'le grand (?:cyphre|chypre)': 'Le Grand Chypre',
+            '(?:motherfuckin(?:\'|g)|mf) roam': 'Roam',
+            'lavanille': 'Lavanille',
+            'first snow': 'First Snow',
+            '(?:cologne|colonge|colnge) russe': 'Cologne Russe',
+            '(?:the |the full |)measure of (?:a |)man+': 'The Full Measure of Man',
+            # latha
+            'osmanthus': 'Osmanthus',
+            'latha taiga': 'Taiga',
+            'latha original': 'Latha Original',
+        },
+        lowpatterns={
+            # reserve
+            'waves': 'Reserve Waves',
+            'spice': 'Reserve Spice',
+            'fern': 'Reserve Fern',
+            'lavender': 'Reserve Lavender',
+            'cool': 'Reserve Cool',
+            'classic': 'Reserve Classic',
+            'taiga': 'Taiga',
+        },
+        bases=[ 'latha', 'soft heart series', 'soft(?:ish|)\\s*hearts?', 'SH'
+                'excelsior', 'glissant', 'reserve', 'pp8' ]
+    ),
 
     'BAUME.BE': {
         '(?:shaving |)soap': 'Soap',
@@ -944,12 +1084,9 @@ _scent_pats = {
 }
 
 _compiled_pats = None
-_unique_names = None
 
 def _add_unique( name_dict: dict ):
     global _unique_names
-    if not _unique_names:
-        _unique_names = { }
     for name in name_dict:
         if name not in _unique_names:
             _unique_names[name] = 1
@@ -957,40 +1094,31 @@ def _add_unique( name_dict: dict ):
             _unique_names[name] += 1
 
 
-def _compile( name ):
-    global _compiled_pats
-    if _compiled_pats is None:
-        _compiled_pats = { }
-    if name:
-        if name in _compiled_pats:
-            return True
-        if name in _scent_pats:
-            map = _scent_pats[name]
+def _compile_all():
+    global _compiled_pats, _unique_names
+    if _compiled_pats is not None:
+        return
+    _compiled_pats = { }
+    for maker in _scent_pats:
+        if isinstance(_scent_pats[maker], Sniffer):
+            _compiled_pats[maker] = _scent_pats[maker]
+            _compiled_pats[maker].makername = maker
+        else:
+            map = _scent_pats[maker]
+            if len(map) == 0:
+                continue
             comp = { }
             isonames = { }
             for pattern in map:
-                comp[re.compile(pattern + _ending, re.IGNORECASE)] = map[pattern]
+                comp[re.compile(_prefix + pattern + _suffix, re.IGNORECASE)] = map[pattern]
                 isonames[map[pattern]] = 1
-            _compiled_pats[name] = comp
+            _compiled_pats[maker] = comp
             _add_unique(isonames)
-            return True
-    else:
-        for mkr in _scent_pats:
-            if mkr not in _compiled_pats:
-                map = _scent_pats[mkr]
-                comp = { }
-                isonames = { }
-                for pattern in map:
-                    comp[re.compile(pattern + _ending, re.IGNORECASE)] = map[pattern]
-                    isonames[map[pattern]] = 1
-                _compiled_pats[mkr] = comp
-                _add_unique(isonames)
-    return False
 
 
 def _isUniqueScent( name: str ):
     if not _unique_names:
-        raise Exception("_unique_names not built!")
+        raise Exception("_unique_names not complete!")
     return name in _unique_names and _unique_names[name] == 1
 
 
@@ -1001,52 +1129,79 @@ def matchScent( maker, scent ):
             'name': the standard scent name
         Otherwise None is returned.
     """
-    if not _compile(maker):
+    _compile_all()
+    if maker not in _compiled_pats:
         return None
-    for pattern in _compiled_pats[maker]:
-        result = pattern.match(scent)
+    so = _compiled_pats[maker]
+    if isinstance(so, Sniffer):
+        result = so.match_on_maker(scent)
         if result:
-            return { 'result': result, 'name': _compiled_pats[maker][pattern] }
+            return result
+        nobase = so.strip_base(scent)
+        if nobase == scent:
+            return None
+        result = _any_pattern.match(scent)
+        return { 'result': result, 'name': nobase }
+    else:
+        for pattern in so:
+            result = pattern.match(scent)
+            if result:
+                return { 'result': result, 'name': _compiled_pats[maker][pattern] }
     return None
 
 
 def findAnyScent( text ):
-    _compile(None)
+    _compile_all()
     best = None
-    issearch = False
     for maker in _compiled_pats:
-        if len(_compiled_pats[maker]) < 2:
-            # don't do single scents for now
+        so = _compiled_pats[maker]
+        if isinstance(so, Sniffer):
+            result = _internal_find(text, maker, so.highpatterns, best)
+        else:
+            result = _internal_find(text, maker, so, best)
+        if result:
+            best = result
+
+    return best
+
+
+def _internal_find( text: str, maker: str, patterndict: dict, best: dict ):
+    if len(patterndict) < 2:
+        # don't do single scents for now
+        return None
+    bestlen = 0
+    if best:
+        bestlen = best['result'].end() - best['result'].start()
+    for pattern in patterndict:
+        if (pattern.match('') or pattern.match('cream') or pattern.match('soap')
+                or _simple_cream_soap_pat.match(patterndict[pattern])):
+            # simple cream/soap; not valid for scent-first match
+            # TODO uniqueness test
             continue
-        for pattern in _compiled_pats[maker]:
-            if (pattern.match('') or pattern.match('cream') or pattern.match('soap')
-                    or _simple_cream_soap_pat.match(_compiled_pats[maker][pattern])):
-                # simple cream/soap; not valid for scent-first match
-                # TODO uniqueness test
-                continue
-            result = pattern.match(text)
+        result = pattern.match(text)
+        if result and (not best
+                or result.start() < best['result'].start()
+                or (result.end() - result.start() > bestlen)):
+            best = {
+                'result': result,
+                'scent': patterndict[pattern],
+                'maker': maker,
+                'lather': text,
+                'search': False
+            }
+        elif not best or (best and best['search']):
+            is_unique = _unique_names[patterndict[pattern]] == 1
+            result = pattern.search(text)
             if result and (not best
-                    or result.start() < best['result'].start()
-                    or (result.end() - result.start() > best['result'].end() - best['result'].start())):
+                    or (is_unique and result.start() < best['result'].start())
+                    or (result.end() - result.start() > bestlen)):
                 best = {
                     'result': result,
-                    'scent': _compiled_pats[maker][pattern],
+                    'scent': patterndict[pattern],
                     'maker': maker,
-                    'lather': text
+                    'lather': text,
+                    'search': True
                 }
-            elif not best or issearch:
-                result = pattern.search(text)
-                if result and (not best
-                        or result.start() < best['result'].start()
-                        or (result.end() - result.start() > best['result'].end() - best['result'].start())):
-                    issearch = True
-                    best = {
-                        'result': result,
-                        'scent': _compiled_pats[maker][pattern],
-                        'maker': maker,
-                        'lather': text
-                    }
-
     return best
 
 
@@ -1054,10 +1209,15 @@ def getSingleScent( maker ):
     """ If only one single scent is known for this maker, its name is returned.
         Otherwise None is returned.
     """
-    if not _compile(maker):
-        return None
-    if len(_compiled_pats[maker]) == 1:
-        for x in _compiled_pats[maker]:
-            return _compiled_pats[maker][x]
+    _compile_all()
+    if maker not in _compiled_pats:
+        return
+    so = _compiled_pats[maker]
+    if isinstance(so, Sniffer):
+        if so.is_single_scent():
+            return so.get_default_scent()
+    elif len(so) == 1:
+        for x in so:
+            return so[x]
     return None
 
