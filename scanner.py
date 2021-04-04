@@ -11,20 +11,21 @@ import re
 from pathlib import Path
 
 lather_pattern = re.compile('''(?:^|[\n])[^a-z]*
-        (?:soap/lather|lather|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream\\b)
+        (?:soap/lather|lather|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap\\b|cream\\b)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         (?:shave\\b)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shav(?:ing|e) (?:soap|cream)|soap|cream|(?:soap\\s*|)sample)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
+type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shav(?:ing|e) (?:soap|cream)|soap|cream|(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\||–)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
 by_pattern = re.compile('(.*?)\\s+(?:by|from)\\s*$', re.IGNORECASE)
-sample_pattern = re.compile('\\s*\\(sample(?: size|)\\)\\s*$', re.IGNORECASE)
+sample_pattern = re.compile('\\s*(?:sample|\\(sample(?: size|)\\))\\s*$', re.IGNORECASE)
 quoted_pattern = re.compile('\\s*(["\'])(.*)\\1\\s*')
+non_alpha_pattern = re.compile('\W*')
 
 sotd_pattern = re.compile('sotd', re.IGNORECASE)
 ymd_pattern = re.compile('(\\d{4})-(\\d\\d)-(\\d\\d)', re.IGNORECASE)
@@ -166,7 +167,11 @@ def cleanAndMatchScent( lather: LatherMatch ):
     if lpos > 0:
         bpos = text.find('[', 0, lpos)
         if bpos > 0:
-            text = text[0:bpos]
+            result = non_alpha_pattern.match(text[0:bpos])
+            if result and result.end() > bpos:
+                text = text[bpos+1:lpos]
+            else:
+                text = text[0:bpos]
         elif bpos == 0:
             text = text[1:lpos]
         else:
@@ -198,19 +203,31 @@ def cleanAndMatchScent( lather: LatherMatch ):
     if result:
         text = text[0:result.start()]
 
+    result = possessive_pattern.match(text)
+    if result: # TODO check that the apostrophe is not preceded by a space
+        text = text[result.end():]
+
     result = quoted_pattern.match(text)
     if result:
         text = result.group(2)
+    else:
+        bpos = text.find('“')
+        if bpos >= 0:
+            lpos = text.find('”', bpos)
+            if lpos > bpos:
+                text = text[bpos+1:lpos]
     text = text.strip()
 
     result = scents.matchScent(lather.maker, text)
+    # TODO confidence boost here really should be based on the
+    # proportion of text matched (including base name)
     if result:
         lather.scent = result['name']
         lather.context += 'X'
         lather.confidence += 4
         return True
     elif len(lather.scent) > 0:
-        lather.scent = text
+        lather.scent = title_case(text)
         lather.context += 'Y'
         lather.confidence += 3
     return False
@@ -234,6 +251,7 @@ def scanBody( tlc, silent = False ):
         lather.lather = lmr.group(1).strip()
         lather.context = 'L'
         lather.confidence = 3
+        # TODO match "N/A", "none", "nothing" ??
         result = makers.matchMaker(lather.lather)
         if result:
             lather.maker = result['name']
@@ -270,6 +288,25 @@ def scanBody( tlc, silent = False ):
             lather.confidence += 2
         elif lather.maker:
             lather.confidence -= 1
+        else:
+            pos = lather.lather.find(' - ')
+            if (pos > 0):
+                lather.maker = lather.lather[0:pos]
+                lather.scent = lather.lather[pos+3:]
+                # TODO should this use findany?
+            else:
+                result = separator_pattern.search(lather.lather)
+                if result:
+                    lather.maker = lather.lather[0:result.start()]
+                    lather.scent = title_case(lather.lather[result.end():])
+                else:
+                    # TODO needs to be more discriminating still?
+                    result = scents.findAnyScent(lather.lather)
+                    if result:
+                        lather.maker = result['maker']
+                        lather.scent = result['scent']
+                    else:
+                        lather.maker = lather.lather
 
         if lather.maker:
             print(f'Primary match "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
@@ -279,6 +316,7 @@ def scanBody( tlc, silent = False ):
                 lather.maker = result['maker']
                 lather.scent = result['scent']
                 lather.context += 'S'
+                # TODO confidence boost based on proportion of text matched?
                 lather.confidence += 2
                 print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
             else:
@@ -309,6 +347,7 @@ def scanBody( tlc, silent = False ):
                 lather.maker = result['maker']
                 lather.scent = result['scent']
                 lather.context += 'S'
+                # TODO confidence boost should be based on proportion text matched
                 lather.confidence += 2
                 print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
             else:
@@ -318,11 +357,9 @@ def scanBody( tlc, silent = False ):
     return lather
 
 
+not_cap_pattern = re.compile('(?:a|the|and|y|into|in|of|on|for|from|at|to|as|so|s|la|le|l|n|de)$', re.IGNORECASE)
 
-
-not_cap_pattern = re.compile('(?:a|the|and|in|of|on|for|from|at|to|as|so|into|s|y|la|le|l|n)$', re.IGNORECASE)
-
-def titleCase( text: str ):
+def title_case( text: str ):
     tctext = ''
     pos = 0
     inword = len(text) > 0 and str.isalpha(text[0])

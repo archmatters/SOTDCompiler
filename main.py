@@ -210,12 +210,12 @@ def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
 
 
 # credentials & agent read from praw.ini
-reddit = praw.Reddit(site_name = 'SOTDScanner')
+reddit = praw.Reddit(site_name='SOTDScanner')
 wssub = reddit.subreddit('Wetshaving')
 
 if arg_mode == Mode.COMPILE:
-    with open(file = 'sotd-{:0>4}-{:0>2}.csv'.format(sotd_year, sotd_month),
-            mode = 'w', encoding = 'utf8') as dataFile:
+    with open(file='sotd-{:0>4}-{:0>2}.csv'.format(sotd_year, sotd_month),
+            mode='w', encoding='utf8') as dataFile:
         do_the_work(wssub, arg_mode)
 elif arg_mode == Mode.INCREMENTAL:
     do_the_work(wssub, arg_mode)
