@@ -17,6 +17,8 @@ class Mode(Enum):
 aparser = argparse.ArgumentParser(description='Load SOTD data from r/Wetshaving')
 aparser.add_argument('command', choices=['compile', 'comp', 'incremental', 'inc'],
         help='Specify the command; a monthly compilation or incremental update.')
+aparser.add_argument('--delimiter', choices=[',', 'comma', '\\t', 'tab'],
+        help='Specify the CSV delimiter for compilation only.')
 aparser.add_argument('--month', metavar='{mm|yyyy-mm}',
         help='Specify the month (current year) or month and year.\n'
         'The default is to compile data for the previous month, or perform\n'
@@ -25,6 +27,12 @@ args = aparser.parse_args()
 
 if args.command in [ 'comp', 'compile' ]:
     arg_mode = Mode.COMPILE
+    if args.delimiter in [ ',', 'c', 'comma' ]:
+        arg_delimiter = ','
+    elif args.delimiter in [ '\t', '\\t', 't', 'tab' ]:
+        arg_delimiter = '\t'
+    else:
+        raise SystemExit(f"Missing or invalid delimiter: select tab or comma with --delimiter.")
 elif args.command in [ 'inc', 'incremental' ]:
     arg_mode = Mode.INCREMENTAL
 else:
@@ -92,6 +100,10 @@ def save_comments_to_cache( post_id: str, post_date: date, comments ):
             author_name = None
             if tlc.author:
                 author_name = tlc.author.name
+            # apparently created_utc is actually created CST?
+            # at least for me it is, and for other posts the conversion is
+            # the same from web -> created_utc
+            # edited appears to work the same despite not being named _utc
             map = {
                 'author': author_name,
                 'id': tlc.id,
@@ -201,7 +213,7 @@ def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
             post_proc_count += 1
             for cmt in comments:
                 comment_count += 1
-                scanner.scanComment(cmt, post_date, dataFile)
+                scanner.scanComment(cmt, post_date, dataFile, arg_delimiter)
             print(f"Processed {comment_count} comments in {post.title}.")
         else:
             raise SystemExit(f"Unknown mode '{mode}'")

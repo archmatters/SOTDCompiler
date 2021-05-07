@@ -11,13 +11,17 @@ import re
 from pathlib import Path
 
 lather_pattern = re.compile('''(?:^|[\n])[^a-z]*
-        (?:soap/lather|lather|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap\\b|cream\\b)
+        (?:soap/lather|lather|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|software)\\b
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
-        (?:shave\\b)
-        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
-        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
+        (?:
+            (?:shave\\b)
+            (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
+            (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:ed[pt]|fragrance)|)
+        |
+            soft\\s*goods
+        )[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shav(?:ing|e) (?:soap|cream)|soap|cream|(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\||–)\\s*')
@@ -120,11 +124,12 @@ def removeMarkdown( text: str ):
     return clean
 
 
-def scanComment( tlc, post_date, dataFile ):
+def scanComment( tlc, post_date, dataFile, delimiter ):
     """ Scans the comment body and writes to the CSV output file (dataFile).
             tlc: the Reddit Comment object
             post_date: the datetime.date object for the post date (not necessarily the comment posted time)
             dateFile: the CSV output file (result of open())
+            delimiter: the delimiter to use, comma ',' or tab '\\t'
     """
     details = scanBody(tlc)
 
@@ -135,17 +140,36 @@ def scanComment( tlc, post_date, dataFile ):
     trim_lather = details.lather
     if trim_lather is not None:
         trim_lather = trim_lather.strip()
+    comment_url = 'https://old.reddit.com' + tlc.permalink
+    rpos = len(comment_url) - 1
+    if comment_url[rpos] == '/':
+        rpos = comment_url.rfind('/', 0, rpos)
+    thread_url = comment_url[0:rpos + 1]
     data = [ post_date.strftime('%Y-%m-%d'),
             datetime.datetime.fromtimestamp(tlc.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
             author_name, details.maker, details.scent, details.getConfidenceText(),
-            trim_lather, tlc.id, 'https://old.reddit.com' + tlc.permalink ]
-    dataFile.write('"')
+            trim_lather, tlc.id, details.plaintext, thread_url ]
+
+    if delimiter == ',':
+        dataFile.write('"')
     for i in range(len(data)):
+        if delimiter == "\t" and i >= 8:
+            continue
         if i > 0:
-            dataFile.write('","')
+            if delimiter == ',':
+                dataFile.write('","')
+            else:
+                dataFile.write(delimiter)
         if data[i]:
-            dataFile.write(data[i].replace('"','""'))
-    dataFile.write("\"\n")
+            text = data[i]
+            if delimiter == ',':
+                text = text.replace('"', ' ')
+            else:
+                text = text.replace(delimiter, ' ').replace('\n', ' ').replace('\r', '')
+            dataFile.write(text)
+    if delimiter == ',':
+        dataFile.write('"')
+    dataFile.write("\n")
 
 
 def scentFirst( body: str, lather: str ):
@@ -294,6 +318,8 @@ def scanBody( tlc, silent = False ):
                 lather.maker = lather.lather[0:pos]
                 lather.scent = lather.lather[pos+3:]
                 # TODO should this use findany?
+                # I don't think so... if scent can be identified by findany, then
+                # how did we fail to match the maker?
             else:
                 result = separator_pattern.search(lather.lather)
                 if result:
@@ -303,6 +329,7 @@ def scanBody( tlc, silent = False ):
                     # TODO needs to be more discriminating still?
                     result = scents.findAnyScent(lather.lather)
                     if result:
+                        lather.context += 'S'
                         lather.maker = result['maker']
                         lather.scent = result['scent']
                     else:
@@ -357,12 +384,13 @@ def scanBody( tlc, silent = False ):
     return lather
 
 
-not_cap_pattern = re.compile('(?:a|the|and|y|into|in|of|on|for|from|at|to|as|so|s|la|le|l|n|de)$', re.IGNORECASE)
+not_cap_pattern = re.compile('(?:a|the|and|y|into|in|of|on|for|from|at|to|as|so|s|la|le|l|n|de|di|los)$', re.IGNORECASE)
 
 def title_case( text: str ):
     tctext = ''
     pos = 0
     inword = len(text) > 0 and str.isalpha(text[0])
+    text = text.replace('&#39;', "'")
     # recognize ALL CAPS STRING AS DISTINCT from distinct WORDS in all caps
     allcaps = str.isupper(text)
     for i in range(1, len(text) + 1):
