@@ -16,20 +16,23 @@ lather_pattern = re.compile('''(?:^|[\n])[^a-z]*
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         (?:
-            (?:shave\\b)
+            (?:(?<!\\#)shave\\b)
             (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
             (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:ed[pt]|fragrance)|)
         |
             soft\\s*goods
+        |
+            pre[\\- ]?shave/(?:soap|cream)/(?:balm|after[\\- ]?shave|splash)
         )[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s*(?:soap|cream)|\\s*shav(?:ing|e) (?:soap|cream)|soap|cream|(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
+type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s+(?:soap|cream)|\\s+shav(?:ing|e) (?:soap|cream)| soap| cream| (?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
 # applied to markdown, hence the backslash
-separator_pattern = re.compile('\\s*(?:\\\\?-+|:|,|\\.|\\||–)\\s*')
+separator_pattern = re.compile('\\s*(?:\\\\?-+|–|:|,|\\.|\\|)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
 by_pattern = re.compile('(.*?)\\s+(?:by|from)\\s*$', re.IGNORECASE)
 sample_pattern = re.compile('\\s*(?:sample|\\(sample(?: size|)\\))\\s*$', re.IGNORECASE)
 quoted_pattern = re.compile('\\s*(["\'])(.*)\\1\\s*')
 non_alpha_pattern = re.compile('\W*')
+unknown_scent_pattern = re.compile('shav(?:ing|e)(?:\\s*(?:soap|cream)|)\\s*$', re.IGNORECASE)
 
 sotd_pattern = re.compile('sotd', re.IGNORECASE)
 ymd_pattern = re.compile('(\\d{4})-(\\d\\d)-(\\d\\d)', re.IGNORECASE)
@@ -242,16 +245,27 @@ def cleanAndMatchScent( lather: LatherMatch ):
                 text = text[bpos+1:lpos]
     text = text.strip()
 
-    result = scents.matchScent(lather.maker, text)
+    result = scents.match_scent(lather.maker, text)
     # TODO confidence boost here really should be based on the
     # proportion of text matched (including base name)
-    if result:
+    # ALSO, note that if we match a base, but not scent, that should
+    # be a smaller confidence boost, but is treated the same!
+    if result and result['match']:
         lather.scent = result['name']
         lather.context += 'X'
         lather.confidence += 4
         return True
+    elif result:
+        if unknown_scent_pattern.match(result['name']):
+            lather.scent = 'Unknown'
+        else:
+            lather.scent = result['name']
+        lather.context += 'Y'
+        lather.confidence += 3
+    elif unknown_scent_pattern.match(text):
+        lather.scent = 'Unknown'
     elif len(lather.scent) > 0:
-        lather.scent = title_case(text)
+        lather.scent = scents.title_case(text)
         lather.context += 'Y'
         lather.confidence += 3
     return False
@@ -314,17 +328,27 @@ def scanBody( tlc, silent = False ):
             lather.confidence -= 1
         else:
             pos = lather.lather.find(' - ')
-            if (pos > 0):
+            if pos < 0:
+                pos = lather.lather.find(' – ')
+            if pos > 0:
                 lather.maker = lather.lather[0:pos]
                 lather.scent = lather.lather[pos+3:]
                 # TODO should this use findany?
                 # I don't think so... if scent can be identified by findany, then
                 # how did we fail to match the maker?
+                # Answer: Chatillon Lux is not a known maker, but has known scents
+                result = scents.findAnyScent(lather.lather.strip())
+                if result:
+                    lather.context += 'S'
+                    lather.maker = result['maker']
+                    lather.scent = result['scent']
+                else:
+                    cleanAndMatchScent(lather)
             else:
                 result = separator_pattern.search(lather.lather)
                 if result:
                     lather.maker = lather.lather[0:result.start()]
-                    lather.scent = title_case(lather.lather[result.end():])
+                    lather.scent = scents.title_case(lather.lather[result.end():])
                 else:
                     # TODO needs to be more discriminating still?
                     result = scents.findAnyScent(lather.lather)
@@ -336,7 +360,7 @@ def scanBody( tlc, silent = False ):
                         lather.maker = lather.lather
 
         if lather.maker:
-            print(f'Primary match "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
+            print(f'Primary match "{lather.maker}" / "{lather.scent}" ({lather.getConfidenceText()}) in {tlc.id} by {tlc.author}')
         else:
             result = scentFirst(tlc.body, lather.lather)
             if result:
@@ -345,7 +369,7 @@ def scanBody( tlc, silent = False ):
                 lather.context += 'S'
                 # TODO confidence boost based on proportion of text matched?
                 lather.confidence += 2
-                print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
+                print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" ({lather.getConfidenceText()}) in {tlc.id} by {tlc.author}')
             else:
                 print(f'No match against "{lather.lather}" in {tlc.id} by {tlc.author}')
     else:
@@ -366,7 +390,7 @@ def scanBody( tlc, silent = False ):
         if lather.scent:
             cleanAndMatchScent(lather)
         if lather.maker:
-            print(f'Body match "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
+            print(f'Body match "{lather.maker}" / "{lather.scent}" ({lather.getConfidenceText()}) in {tlc.id} by {tlc.author}')
         else:
             result = scentFirst(tlc.body, None)
             if result:
@@ -376,38 +400,10 @@ def scanBody( tlc, silent = False ):
                 lather.context += 'S'
                 # TODO confidence boost should be based on proportion text matched
                 lather.confidence += 2
-                print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" in {tlc.id} by {tlc.author}')
+                print(f'Scent-first match on "{lather.maker}" / "{lather.scent}" ({lather.getConfidenceText()}) in {tlc.id} by {tlc.author}')
             else:
                 print(f'No lather in {tlc.id} by {tlc.author}')
     if lmr:
         lather.lather = lmr.group(0).strip()
     return lather
-
-
-not_cap_pattern = re.compile('(?:a|the|and|y|into|in|of|on|for|from|at|to|as|so|s|la|le|l|n|de|di|los)$', re.IGNORECASE)
-
-def title_case( text: str ):
-    tctext = ''
-    pos = 0
-    inword = len(text) > 0 and str.isalpha(text[0])
-    text = text.replace('&#39;', "'")
-    # recognize ALL CAPS STRING AS DISTINCT from distinct WORDS in all caps
-    allcaps = str.isupper(text)
-    for i in range(1, len(text) + 1):
-        if i == len(text):
-            nextword = not inword
-        else:
-            nextword = str.isalpha(text[i])
-        if nextword != inword:
-            candidate = inword and (pos == 0 or (text[pos - 1].isspace()))
-            capword = allcaps or not text[pos].isupper()
-            if candidate and capword and (pos == 0 or not not_cap_pattern.match(text, pos, i)):
-                tctext += text[pos].upper() + text[pos + 1:i].lower()
-            elif candidate and capword and not_cap_pattern.match(text, pos, i):
-                tctext += text[pos:i].lower()
-            else:
-                tctext += text[pos:i]
-            pos = i
-            inword = nextword
-    return tctext
 

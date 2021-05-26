@@ -19,7 +19,7 @@ _maker_pats = {
     'apex alchemy\\s*(?:soaps?|shaving|)': 'Apex Alchemy Soaps',
 
     'ariana' + _any_and + 'evans' + _any_and + 'gr[ea]y matter': 'Ariana & Evans',
-    'ariana' + _any_and + 'evans\\s*(?:/?|-)\\s*(?:the |)club': 'Ariana & Evans',
+    '(?:ariana' + _any_and + 'evans|a' + _any_and + 'e)\\s*(?:/?|-)\\s*"?(?:the |)club"?': 'Ariana & Evans',
     'the club\\s*/\\s*ariana' + _any_and + 'evans': 'Ariana & Evans',
     '@?ariana\\.evans\\.thebrand': 'Ariana & Evans',
     'arian+a' + _any_and + 'evans': 'Ariana & Evans',
@@ -319,6 +319,8 @@ _maker_pats = {
 
     'moon soaps?': 'Moon Soaps',
 
+    'mount royal(?: soap' + _opt_company + '|)': 'Mount Royal Soap Co.',
+
     'murphy' + _any_and + 'daughters?': 'Murphy & Daughters',
 
     'murphy' + _any_and + 'mcneil': 'Murphy and McNeil',
@@ -421,7 +423,7 @@ _maker_pats = {
     'saponificio\\s*va?r[ei]sino': 'Saponificio Varesino',
     'saponifici?o\\s*varen?s[ie]n?i?o': 'Saponificio Varesino',
 
-    'la Savon+i[èe]re du moulin': 'La Savonnière du Moulin',
+    'la Savon+i[èe]r+e du moulin': 'La Savonnière du Moulin',
 
     'scentsy(?:cream shave soap|)': 'Scentsy',
 
@@ -479,7 +481,7 @@ _maker_pats = {
     '(?:the|)\\s*sudsy soap[ae]ry?\\s*[/&]\\s*chatillon lux': 'The Sudsy Soapery',
     '(?:the|)\\s*sudsy soap[ae]ry?': 'The Sudsy Soapery',
 
-    'london razors' + _any_and + 'summer break(?: soaps?|)' : 'Summer Break Soaps',
+    'london razors' + _any_and + '(?:summer break(?: soaps?|)|sbs)' : 'Summer Break Soaps',
     'london razors' : 'Summer Break Soaps',
     'summer break(?: soaps?|)' + _any_and + 'london razors' : 'Summer Break Soaps',
 
@@ -488,10 +490,10 @@ _maker_pats = {
 
     '(?:the |)swedish witch': 'The Swedish Witch',
 
+    'talbot\\s*(?:shaving|)' + _any_and + 'CB': 'Talbot Shaving',
     '@talbotshaving @maolgrooming': 'Talbot Shaving',
     '@talbotshaving': 'Talbot Shaving',
     'talbot\\s*(?:shaving|)': 'Talbot Shaving',
-    'talbot\\s*(?:shaving|)' + _any_and + 'CB': 'Talbot Shaving',
 
     'tabac\\b': 'Tabac',
 

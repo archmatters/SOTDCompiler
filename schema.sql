@@ -34,6 +34,7 @@ create table comment (
     , submission_id varchar(16) not null
     , plaintext_key int
     , html_key int
+    , duplicate_comment_id varchar(16)
     , primary key (comment_id)
     , foreign key (plaintext_key) references full_text(text_key)
     , foreign key (html_key) references full_text(text_key)

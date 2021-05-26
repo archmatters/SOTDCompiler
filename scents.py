@@ -115,23 +115,23 @@ class Sniffer:
         text = text.strip()
         if not text and self.default_scent:
             result = _any_pattern.match(text)
-            return { 'result': result, 'name': self.get_default_scent() }
+            return { 'match': result, 'name': self.get_default_scent() }
 
         for pattern in self.highpatterns:
             result = pattern.match(text)
             if not result:
                 result = pattern.search(text)
             if result:
-                return { 'result': result, 'name': self.highpatterns[pattern] }
+                return { 'match': result, 'name': self.highpatterns[pattern] }
                 
         for pattern in self.lowpatterns:
             result = pattern.match(text)
             if result:
-                return { 'result': result, 'name': self.lowpatterns[pattern] }
+                return { 'match': result, 'name': self.lowpatterns[pattern] }
         for pattern in self.lowpatterns:
             result = pattern.search(text)
             if result:
-                return { 'result': result, 'name': self.lowpatterns[pattern] }
+                return { 'match': result, 'name': self.lowpatterns[pattern] }
                 
         return None
     
@@ -1290,6 +1290,13 @@ _scent_pats = {
         bases=[ 'beta 4.1', 'beta 4.2', 'beta 4.3' ]
     ),
 
+    'La Savonnière du Moulin': Sniffer(
+        lowpatterns={
+            'unscented': 'Unscented',
+            'sans parfum': 'Unscented',
+            'but+er\\s*scotch': 'Butterscotch',
+        }
+    ),
     'Scheermonnik': Sniffer(
         patterns={
             '(?:1778 |)beau brummell': '1778 Beau Brummell',
@@ -1384,6 +1391,7 @@ _scent_pats = {
             'seaforth!? "?spiced"?': 'Seaforth! Spiced',
             'seaforth!?\\s*-\\s*heather': 'Seaforth! Heather',
             'seaforth!?\\s*-\\s*spiced': 'Seaforth! Spiced',
+            '(?:seaforth!?\\s*-\\s*|)sea spice li[mn]e': 'Seaforth! Sea Spice Lime',
             'nutmeg' + _any_and + 'heliotrope': 'Nutmeg & Heliotrope',
             'cedar,? clary\\s*sage,?' + _any_and + 'bergamot': 'Cedar, Clarysage, Bergamot',
         },
@@ -1728,10 +1736,10 @@ def _isUniqueScent( name: str ):
     return name in _unique_names and _unique_names[name] == 1
 
 
-def matchScent( maker, scent ):
+def match_scent( maker, scent ):
     """ Attempts to match a scent name.  If successful, a dict is returned with the
         following elements:
-            'result': the result object from Pattern.match()
+            'match': the result object from Pattern.match(), may be None
             'name': the standard scent name
         Otherwise None is returned.
     """
@@ -1746,13 +1754,12 @@ def matchScent( maker, scent ):
         nobase = so.strip_base(scent)
         if nobase == scent:
             return None
-        result = _any_pattern.match(scent)
-        return { 'result': result, 'name': nobase }
+        return { 'match': None, 'name': title_case(nobase) }
     else:
         for pattern in so:
             result = pattern.match(scent)
             if result:
-                return { 'result': result, 'name': _compiled_pats[maker][pattern] }
+                return { 'match': result, 'name': _compiled_pats[maker][pattern] }
     return None
 
 
@@ -1826,4 +1833,36 @@ def getSingleScent( maker ):
         for x in so:
             return so[x]
     return None
+
+
+not_cap_pattern = re.compile('(?:a|the|and|y|into|in|of|on|for|from|at|to|as|so|s|la|le|l|n|de|di|los)$', re.IGNORECASE)
+
+def title_case( text: str ):
+    tctext = ''
+    pos = 0
+    inword = len(text) > 0 and str.isalpha(text[0])
+    text = text.replace('&#39;', "'")
+    # recognize ALL CAPS STRING AS DISTINCT from distinct WORDS in all caps
+    # however a short single word could be an acronym
+    allcaps = str.isupper(text)
+    if allcaps and len(text) < 6 and text.find(' ') < 0:
+        return text
+    for i in range(1, len(text) + 1):
+        if i == len(text):
+            nextword = not inword
+        else:
+            nextword = str.isalpha(text[i])
+        if nextword != inword:
+            candidate = inword and (pos == 0 or (text[pos - 1].isspace()))
+            capword = allcaps or not text[pos].isupper()
+            if candidate and capword and (pos == 0 or not not_cap_pattern.match(text, pos, i)):
+                tctext += text[pos].upper() + text[pos + 1:i].lower()
+            elif candidate and capword and not_cap_pattern.match(text, pos, i):
+                tctext += text[pos:i].lower()
+            else:
+                tctext += text[pos:i]
+            pos = i
+            inword = nextword
+    return tctext
+
 
