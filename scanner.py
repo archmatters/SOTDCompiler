@@ -10,8 +10,8 @@ import re
 
 from pathlib import Path
 
-lather_pattern = re.compile('''(?:^|[\n])[^a-z]*
-        (?:soap/lather|lather|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|software)\\b
+lather_pattern = re.compile('''(?:^|[\n])[^a-z0-9]*
+        (?:soap/lather|lath?er|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|software)\\b
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
@@ -24,7 +24,10 @@ lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         |
             pre[\\- ]?shave/(?:soap|cream)/(?:balm|after[\\- ]?shave|splash)
         )[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('(?:\\s*[\\-,]\\s+(?:soap|cream)|\\s+shav(?:ing|e) (?:soap|cream)| soap| cream| (?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$', re.IGNORECASE)
+type_suffix_pattern = re.compile('''(?:\\s*[\\-,]\\s+(?:soap|cream)
+        |\\s+shav(?:ing|e)\\s+(?:soap|cream)
+        |\\s+soap|\\s+cream|\\s+\\(soap\\)
+        |\\s+(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$''', re.IGNORECASE | re.VERBOSE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|–|:|,|\\.|\\|)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
@@ -195,7 +198,7 @@ def cleanAndMatchScent( lather: LatherMatch ):
         bpos = text.find('[', 0, lpos)
         if bpos > 0:
             result = non_alpha_pattern.match(text[0:bpos])
-            if result and result.end() > bpos:
+            if result and result.end() >= bpos:
                 text = text[bpos+1:lpos]
             else:
                 text = text[0:bpos]
