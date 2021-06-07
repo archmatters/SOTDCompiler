@@ -25,7 +25,7 @@ def test_lather_patterns( ):
     # are we testing a change to the main, or alt?
     testing_alt = False
     test_pattern = re.compile('''(?:^|[\n])[^a-z0-9]*
-        (?:soap/lather|lath?er|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|software)\\b
+        (?:soap/lather|lath?er|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|softw[ae]re)\\b
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
     for name in data_dir.glob(check_glob):
