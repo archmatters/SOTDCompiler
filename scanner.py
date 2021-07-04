@@ -13,7 +13,8 @@ from pathlib import Path
 lather_pattern = re.compile('''(?:^|[\n])[^a-z0-9]*
         (?:soap/lather|lath?er|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|softw[ae]re)\\b
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
-        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
+        (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)
+        (?!\\s*games)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         (?:
             (?:(?<!\\#)shave\\b)

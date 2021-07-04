@@ -309,6 +309,8 @@ _scent_pats = {
             'first snow': 'First Snow',
             '(?:cologne|colonge|colnge) russe': 'Cologne Russe',
             '(?:the |the full |)measure of (?:a |)man+': 'The Full Measure of Man',
+            # club release
+            'passiflora': 'Passiflora',
             # latha
             'osmanthus': 'Osmanthus',
             'latha taiga': 'Taiga',
@@ -633,6 +635,13 @@ _scent_pats = {
             'barbershop': 'Barbershop',
             'clary sage' + _any_and + 'violet': 'Clary Sage & Violet',
             'clary sage': 'Clary Sage & Violet',
+        }
+    ),
+
+    'Elvado': Sniffer(
+        lowpatterns={
+            '(?:royal |)tahitian lime': 'Royal Tahitian Lime',
+            'lake of the woods': 'Lake of the Woods',
         }
     ),
 
@@ -1191,7 +1200,7 @@ _scent_pats = {
     'PannaCrema': Sniffer(
         patterns={
             'nu[àa]via blue?': 'Nuàvia Blu',
-            'nu[àa]via (?:rossa?|red)': 'Nuàvia Rossa',
+            'nu[àa]via (?:ross[ao]?|red)': 'Nuàvia Rossa',
             'nu[àa]via nema': 'Nuàvia Nema',
             'nu[àa]via (?:verde|green)': 'Nuàvia Verde',
         },
@@ -1306,6 +1315,13 @@ _scent_pats = {
             'blue': 'Aloe & Vitamin E',
             'sandalwood': 'Sandalwood',
         }
+    ),
+
+    'Prosar': Sniffer(
+        lowpatterns={
+            'shave cream': 'Classic',
+        },
+        default_scent='Classic',
     ),
 
     'Purely Skinful': Sniffer(
@@ -1710,6 +1726,13 @@ _scent_pats = {
         }
     ),
 
+    'Wet Shaving Delight': Sniffer(
+        patterns={
+            'go ask alice': 'Go Ask Alice',
+            'wet shaving delight': 'placeholder to prevent single scent logic',
+        }
+    ),
+
     'Wet Shaving Products': Sniffer(
         lowpatterns={
             'gaelic tweed': 'Gaelic Tweed',
@@ -1736,7 +1759,8 @@ _scent_pats = {
             'pasteur' + _apostrophe + 's alchemy': 'Pasteur\'s Alchemy',
             'n[oi]ce d[ie] coc[co]o': 'Noce di Cocco',
             'bare siero': 'Unscented',
-            'tim+erman+': 'Timmermann'
+            'tim+erman+': 'Timmermann',
+            'king of bourbon': 'King of Bourbon',
         },
         lowpatterns={
             'eroe': 'Eroe',
