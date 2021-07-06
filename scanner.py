@@ -255,15 +255,15 @@ def cleanAndMatchScent( lather: LatherMatch ):
     # ALSO, note that if we match a base, but not scent, that should
     # be a smaller confidence boost, but is treated the same!
     if result and result['match']:
-        lather.scent = result['name']
+        lather.scent = result['scent']
         lather.context += 'X'
         lather.confidence += 4
         return True
     elif result:
-        if unknown_scent_pattern.match(result['name']):
+        if unknown_scent_pattern.match(result['scent']):
             lather.scent = 'Unknown'
         else:
-            lather.scent = result['name']
+            lather.scent = result['scent']
         lather.context += 'Y'
         lather.confidence += 3
     elif unknown_scent_pattern.match(text):
@@ -341,13 +341,7 @@ def scanBody( tlc, silent = False ):
                 # I don't think so... if scent can be identified by findany, then
                 # how did we fail to match the maker?
                 # Answer: Chatillon Lux is not a known maker, but has known scents
-                result = scents.findAnyScent(lather.lather.strip())
-                if result:
-                    lather.context += 'S'
-                    lather.maker = result['maker']
-                    lather.scent = result['scent']
-                else:
-                    cleanAndMatchScent(lather)
+                cleanAndMatchScent(lather)
             else:
                 result = separator_pattern.search(lather.lather)
                 if result:

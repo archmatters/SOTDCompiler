@@ -11,6 +11,7 @@ _prefix = '\\b'
 _suffix = '\\b[\\.,]?'
 
 _unique_names = { }
+_compiled_pats = None
 
 class Sniffer:
     """ A class to handle scent matching.
@@ -115,23 +116,47 @@ class Sniffer:
         text = text.strip()
         if not text and self.default_scent:
             result = _any_pattern.match(text)
-            return { 'match': result, 'name': self.get_default_scent() }
+            return {
+                    'match': result,
+                    'maker': self.makername,
+                    'scent': self.get_default_scent(),
+                    'lather': None,
+                    'search': False
+                }
 
         for pattern in self.highpatterns:
             result = pattern.match(text)
             if not result:
                 result = pattern.search(text)
             if result:
-                return { 'match': result, 'name': self.highpatterns[pattern] }
+                return {
+                        'match': result,
+                        'maker': self.makername,
+                        'scent': self.highpatterns[pattern],
+                        'lather': None,
+                        'search': False
+                    }
                 
         for pattern in self.lowpatterns:
             result = pattern.match(text)
             if result:
-                return { 'match': result, 'name': self.lowpatterns[pattern] }
+                return {
+                        'match': result,
+                        'maker': self.makername,
+                        'scent': self.lowpatterns[pattern],
+                        'lather': None,
+                        'search': False
+                    }
         for pattern in self.lowpatterns:
             result = pattern.search(text)
             if result:
-                return { 'match': result, 'name': self.lowpatterns[pattern] }
+                return {
+                        'match': result,
+                        'maker': self.makername,
+                        'scent': self.lowpatterns[pattern],
+                        'lather': None,
+                        'search': False
+                    }
                 
         return None
     
@@ -1160,15 +1185,15 @@ _scent_pats = {
         default_scent='Sapone da Barba'
     ),
 
-    'Ogallala Bay Rum': {
-        'sage,?' + _any_and + 'cedar': 'Bay Rum, Sage & Cedar',
-        'limes,?' + _any_and + 'peppercorn': 'Bay Rum, Limes & Peppercorn',
-        _any_and + 'sweet orange': 'Bay Rum & Sweet Orange',
-        _any_and + 'vanilla': 'Bay Rum & Vanilla',
-        # TODO '\\s*$': 'Bay Rum',
-    },
-
-    'Old Spice': {},
+    'Ogallala Bay Rum': Sniffer(
+        lowpatterns={
+            'sage,?' + _any_and + 'cedar': 'Bay Rum, Sage & Cedar',
+            'limes,?' + _any_and + 'peppercorn': 'Bay Rum, Limes & Peppercorn',
+            _any_and + 'sweet orange': 'Bay Rum & Sweet Orange',
+            _any_and + 'vanilla': 'Bay Rum & Vanilla',
+        },
+        default_scent='Bay Rum'
+    ),
 
     'Opus Ruri': Sniffer(
         patterns={
@@ -1823,8 +1848,6 @@ _scent_pats = {
     ),
 }
 
-_compiled_pats = None
-
 def _add_unique( name_dict: dict ):
     global _unique_names
     for name in name_dict:
@@ -1873,20 +1896,21 @@ def match_scent( maker, scent ):
     if maker not in _compiled_pats:
         return None
     so = _compiled_pats[maker]
-    if isinstance(so, Sniffer):
-        result = so.match_on_maker(scent)
-        if result:
-            return result
-        nobase = so.strip_base(scent)
-        if nobase == scent:
-            return None
-        return { 'match': None, 'name': title_case(nobase) }
-    else:
-        for pattern in so:
-            result = pattern.match(scent)
-            if result:
-                return { 'match': result, 'name': _compiled_pats[maker][pattern] }
-    return None
+    if not isinstance(so, Sniffer):
+        raise Exception(f"Maker '{maker}' not Sniffer!")
+    result = so.match_on_maker(scent)
+    if result:
+        return result
+    nobase = so.strip_base(scent)
+    if nobase == scent:
+        return None
+    return {
+            'match': None,
+            'maker': maker,
+            'scent': title_case(nobase),
+            'lather': None,
+            'search': False
+        }
 
 
 def findAnyScent( text ):
@@ -1922,7 +1946,7 @@ def _internal_find( text: str, maker: str, patterndict: dict, best: dict ):
                 or result.start() < best['result'].start()
                 or (result.end() - result.start() > bestlen)):
             best = {
-                'result': result,
+                'match': result,
                 'scent': patterndict[pattern],
                 'maker': maker,
                 'lather': text,
@@ -1935,7 +1959,7 @@ def _internal_find( text: str, maker: str, patterndict: dict, best: dict ):
                     or (is_unique and result.start() < best['result'].start())
                     or (result.end() - result.start() > bestlen)):
                 best = {
-                    'result': result,
+                    'match': result,
                     'scent': patterndict[pattern],
                     'maker': maker,
                     'lather': text,
