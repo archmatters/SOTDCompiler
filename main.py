@@ -163,7 +163,7 @@ def update_cache_comments( cached: list, reddit_comments ):
 def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
     post_count = 0
     post_proc_count = 0
-    inc_limit = date.today() - timedelta(days=7)
+    inc_limit = date.today() - timedelta(days=14)
     last_inc_loaded = None
     for post in subreddit.hot(limit=None):
         post_count += 1
