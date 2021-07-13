@@ -193,7 +193,9 @@ _scent_pats = {
         },
         lowpatterns={
             'barbiere': 'Barbiere',
-        }
+            'colonia': 'Barbiere',
+        },
+        default_scent='Barbiere'
     ),
 
     'Alphy & Becs': Sniffer(
@@ -245,6 +247,7 @@ _scent_pats = {
             'warrior of (?:the |)howling fjord': 'Warrior of Howling Fjord',
             'fruits? de la passione?': 'Fruit de la Passion',
             'vanill[ea] vendetta': 'Vanille Vendetta',
+            'club bac+ar+a': 'Club Baccara',
         },
         lowpatterns={
             'spartacus': 'Spartacus',
@@ -257,6 +260,7 @@ _scent_pats = {
             'the kingdom': 'The Kingdom',
             'el gaucho': 'El Gaucho',
             'howling fjord': 'Warrior of Howling Fjord',
+            'bac+ar+a': 'Club Baccara',
         },
         bases=[ 'kaizen', 'k2', 'vegan' ]
     ),
@@ -276,20 +280,26 @@ _scent_pats = {
         }
     ),
 
-    'Arran': {},
-
-    'Australian Private Reserve': {
-        'raconteur': 'Raconteur',
-        'foug[èeé]re trois': 'Fougère Trois',
-        'la\\s*violet+a': 'Lavioletta',
+    'Australian Private Reserve': Sniffer(
+        patterns={
+            'raconteur': 'Raconteur',
+            'foug[èeé]re trois': 'Fougère Trois',
+            'la\\s*violet+a': 'Lavioletta',
+        },
+        lowpatterns={
+            'carnivale?': 'Carnivale', # actually Storybook Soapworks
+            'fresca intensa': 'Fresca Intensa', # actually Storybook Soapworks
+        },
         # TODO special rules for Carnivale and Fresca Intensa
         # which are made under the Storybook Soapworks brand
-    },
+    ),
 
-    'Aveeno': {
-        'positively smooth (?:shave |)gel': 'Positively Smooth',
-        'ther[ae]pe?utic (?:shave |)gel': 'Therapeutic',
-    },
+    'Aveeno': Sniffer(
+        patterns={
+            'positively smooth (?:shave |)gel': 'Positively Smooth',
+            'ther[ae]pe?utic (?:shave |)gel': 'Therapeutic',
+        },
+    ),
 
     'Barbasol': Sniffer(
         patterns={
@@ -321,7 +331,7 @@ _scent_pats = {
             'oh?' + _apostrophe + ',?\\s*delight': 'O, Delight!',
             'brew?(?:-| |)ha[\\- ]?ha': 'Brew Ha-Ha',
             'hallows?': 'Hallows',
-            'paganini' + _apostrophe + 's violin': 'Paganini\'s Violin',
+            'paga?nini' + _apostrophe + 's violin': 'Paganini\'s Violin',
             'levian?than': 'Leviathan',
             'beaudelaire': 'Beaudelaire',
             'foug[èeé]re gothi\w+': 'Fougère Gothique',
@@ -339,7 +349,8 @@ _scent_pats = {
             # latha
             'osmanthus': 'Osmanthus',
             'latha taiga': 'Taiga',
-            'latha original': 'Latha Original',
+            'latha original': 'Latha Original', # specifically identify "Latha Original" as "Latha"
+            'fmom': 'The Full Measure of Man',
         },
         lowpatterns={
             # reserve
@@ -352,7 +363,6 @@ _scent_pats = {
             'taiga': 'Taiga',
             'paganini': 'Paganini\'s Violin',
         },
-        # TODO probably need to specifically identify "Latha Original" as "Latha"
         bases=[ 'latha', 'soft heart series', 'soft(?:ish|)(?:-|\\s*)hearts?', 'SH',
                 'excelsior', 'glissant', 'reserve', 'pp8' ]
     ),
@@ -388,7 +398,9 @@ _scent_pats = {
         }
     ),
 
-    'The Bluebeards Revenge': { '(?:shaving |)cream': 'Shaving Cream' },
+    'The Bluebeards Revenge': Sniffer(
+        default_scent='Shaving Cream',
+    ),
 
     'Boellis': Sniffer(
         patterns={
@@ -442,6 +454,10 @@ _scent_pats = {
         }
     ),
 
+    'C.O. Bigelow': Sniffer(
+        default_scent='Premium'
+    ),
+
     'Castle Forbes': Sniffer(
         lowpatterns={
             'cedarwood' + _any_and + 'sandalwood': 'Cedarwood & Sandalwood',
@@ -464,8 +480,12 @@ _scent_pats = {
         lowpatterns={
             'cool' + _any_and + 'fresh': 'Cool and Fresh',
             'June 2019 Maggard' + _apostrophe + 's? Meetup': 'Maggard Razors 2019 Meetup',
-            'Maggard Meetup 2019': 'Maggard Razors 2019 Meetup',
+            'Maggard Meet(?:up|) 2019': 'Maggard Razors 2019 Meetup',
             'Maggard Razors 2019 Meetup': 'Maggard Razors 2019 Meetup',
+            'Maggard Meet(?:up|) 2017': 'Maggard Razors 2017 Meetup',
+            'Maggard Razors 2017 Meetup': 'Maggard Razors 2017 Meetup',
+            'la terre verte?': 'La Terre Verte',
+            'lmr': 'Le Marché du Rasage',
         },
         bases=[ 'luxury cream soap', 'luxury shaving soap' ]
     ),
@@ -508,12 +528,17 @@ _scent_pats = {
         patterns={
             'montrose beach': 'Montrose Beach',
             'new city:? back of the yards': 'New City Back of the Yards',
+            'roug[eéè]re': 'Rougere',
+            'mor[íiì]r so[ñna]+do': 'Morír Soñando',
         },
         lowpatterns={
             'ex?cursion': 'Excursion',
             'no\\. 11': 'No. 11',
             'new city': 'New City Back of the Yards',
-        }
+            'pear-brr+ shop+e?': 'Pear-Brrr Shoppe',
+            'timeless(?: razors?|)': 'Timeless Razor',
+        },
+        bases=[ 'canard' ]
     ),
 
     'Chiseled Face': Sniffer(
@@ -521,6 +546,9 @@ _scent_pats = {
             'ghost\\s*town barber': 'Ghost Town Barber',
             'midnight stag': 'Midnight Stag',
             'cryogen': 'Cryogen',
+            '(?:zoologist *|)civet': 'Civet',
+            '(?:zoologist *|)panda': 'Panda',
+            '(?:zoologist *|)camel': 'Camel',
         },
         lowpatterns={
             'gtb\\b': 'Ghost Town Barber',
@@ -604,6 +632,8 @@ _scent_pats = {
             'l[ae] petite? prai?rie': 'La Petite Prairie',
             'sunrise on lasalle': 'Sunrise on LaSalle',
             'tsm foug[èeé]re': 'TSM Fougère',
+            'darkfall': 'Darkfall',
+            'scrumtrules?cent': 'Scrumtrulescent',
         },
         lowpatterns={
             'sellout': 'Sellout',
@@ -625,7 +655,6 @@ _scent_pats = {
             'night\\s*man': 'Nightman',
             'bse': 'Big Soap Energy',
             'Champs de Lavande': 'Champs de Lavande',
-            'darkfall': 'Darkfall',
             'sweet lemon': 'Sweet Lemon',
             'la for[êe]t de liguest': 'La Forêt de Liguest',
         },
@@ -642,7 +671,7 @@ _scent_pats = {
             'death or glory': 'Death or Glory',
             'victory or death': 'Victory or Death',
         },
-        bases=[ 'vol. 2', 'vol. 3' ]
+        bases=[ 'vol. 2', 'vol. 3', 'essentials' ] # Essentials not actually a base, but class of soap
     ),
 
     'Dr K Soap Company': Sniffer(
@@ -672,7 +701,7 @@ _scent_pats = {
 
     'ETHOS': Sniffer(
         patterns={
-            'melange d' + _apostrophe + 'agrumes': 'Melange d\'Agrumes',
+            'm[éeè]lange d' + _apostrophe + 'agrumes': 'Mélange d\'Agrumes',
             'succ[èeé]s+': 'Succès',
         }
     ),
@@ -682,7 +711,7 @@ _scent_pats = {
             'dam[ae]s? de noche': 'Dama de Noche',
             'rosa[ \\-]oud': 'Rosa-Oud',
             'vetiver de hait[íi]': 'Vetiver de Haití',
-            'Barakah Oudh': 'Barakah Oudh',
+            'bar+ak(?:ah|) oudh?': 'Barakah Oudh',
             # this is not actually under the Eufros brand... should this be split off?
             # or... should all Eufros soaps be identified as "JabonMan?"
             'mediterr[áa]no l\\.e\\. bullgoose': 'Mediterráneo',
@@ -754,7 +783,7 @@ _scent_pats = {
             'esther' + _apostrophe + 's peppermint' + _any_and + 'grapefruit': 'Esther\'s Peppermint and Grapefruit',
         },
         lowpatterns={
-            'motherfu?cker': 'Motherfucker',
+            'motherf[uc]*ker': 'Motherfucker',
             'mother-?fer': 'Motherfucker',
             'm\\*{4,12}r': 'Motherfucker',
             'barber\\s*shop': 'Barbershop',
@@ -796,12 +825,22 @@ _scent_pats = {
             'kanpai': 'Kanpai'
         },
         lowpatterns={
-            'zaharoff': 'Zaharoff Signature',
+            '(?:zaharoff +|)noir': 'Zaharoff Noir',
+            '(?:zaharoff +|)signature royale?': 'Zaharoff Signature Royale',
+            '(?:zaharoff +|)signature': 'Zaharoff Signature',
             'no. 85': 'Ernest',
             'no. 01': 'George',
             'no. 42': 'Jackie',
             'no. 13': 'Johnny',
             'no. 11': 'Vincent',
+        }
+    ),
+
+    'Geo. F. Trumper': Sniffer(
+        lowpatterns={
+            '(?:extract of |)limes': 'Limes',
+            'rose': 'Rose',
+            'spanish leather': 'Spanish Leather',
         }
     ),
 
@@ -825,7 +864,7 @@ _scent_pats = {
 
     'The Goodfellas\' Smile': Sniffer(
         patterns={
-            'tallow no?. 1': 'N. 1',
+            'tallow no?. *1': 'N. 1',
         },
         lowpatterns={
             'abysso': 'Abysso',
@@ -876,6 +915,7 @@ _scent_pats = {
             'Unum': 'Unum',
             'Veritas': 'Veritas',
             'Wonderland': 'Wonderland',
+            'ny *chypre': 'NYChypre',
         },
         bases=[ 'Nai', 'Kairos', 'Fortis', 'Lusso', 'Mallard' ]
     ),
@@ -893,12 +933,13 @@ _scent_pats = {
     'Haslinger': Sniffer(
         patterns={
             'salbei': 'Salbei',
-            'sch?afmilch': 'Schafmilch',
+            's(?:ch|c|h)afs?milch': 'Schafmilch',
             'sandelholt?z': 'Sandelholz',
         },
         lowpatterns={
             'aloe vera': 'Aloe Vera',
             'sensitive?': 'Sensitiv',
+            'me+re?s(?:al|la)gen': 'Meeresalgen',
         }
     ),
 
@@ -965,10 +1006,20 @@ _scent_pats = {
         default_scent='Institut Karité'
     ),
 
+    'Irisch Moos': Sniffer(
+        default_scent='Irisch Moos'
+    ),
+
     'Italian Barber': Sniffer(
         lowpatterns={
             'amici': 'Amici',
         }
+    ),
+
+    'London Razors': Sniffer(
+        patterns={
+            'mountain laurel': 'Mountain Laurel',
+        },
     ),
 
     'Los Jabones de Joserra': Sniffer(
@@ -984,6 +1035,13 @@ _scent_pats = {
         },
         lowpatterns={
             'tomahawk': 'Tomahawk',
+        }
+    ),
+
+    'Kiss My Face': Sniffer(
+        lowpatterns={
+            'fragrance free': 'Unscented',
+            'lavender' + _any_and + 'shea': 'Lavender & Shea',
         }
     ),
 
@@ -1014,6 +1072,7 @@ _scent_pats = {
         patterns={
             'bespoke #1': 'Bespoke #1',
             'myrkvi[ðdo]r': 'Myrkviðr',
+            'black *fern': 'Blackfern',
         }
     ),
 
@@ -1120,7 +1179,7 @@ _scent_pats = {
 
     'Moon Soaps': Sniffer(
         lowpatterns={
-            'amaretto e?speciale?': 'Amaretto Speciale',
+            'amaretto(?: *e?speciale?|)': 'Amaretto Speciale',
             'union': 'Union',
         }
     ),
@@ -1133,7 +1192,9 @@ _scent_pats = {
             'triskele': 'Triskele',
             'magh tured': 'Magh Tured',
             'ogham stone': 'Ogham Stone',
-            'cat sid+he': 'Cat Sidhe'
+            'cat sid+he': 'Cat Sidhe',
+            'barbershop de los muertos': 'Barbershop de los Muertos',
+            'gael laoch': 'Gael Laoch',
         },
         lowpatterns={
             'bdlm': 'Barbershop de los Muertos',
@@ -1142,11 +1203,26 @@ _scent_pats = {
         bases=[ 'sl[aá]inte', 'aon', 'kodiak' ]
     ),
 
+    'Myrsol': Sniffer(
+        patterns={
+            'agua bals[áa]mica': 'Agua Balsámica',
+            'don carlos(?: 1972|)': 'Don Carlos 1972',
+        }
+    ),
+
     'Mystic Water Soap': Sniffer(
         lowpatterns={
             'bay rum': 'Bay Rum',
             'Brown Windsor': 'Brown Windsor',
             'irish travel+er': 'Irish Traveller',
+        }
+    ),
+
+    'Nivea': Sniffer(
+        lowpatterns={
+            'protect' + _any_and + 'care': 'Protect & Care',
+            'sensitive cooling': 'Sensitive Cooling',
+            'sensitive': 'Sensitive',
         }
     ),
 
@@ -1209,6 +1285,15 @@ _scent_pats = {
         }
     ),
 
+    'Pacific Shaving Co.': Sniffer(
+        lowpatterns={
+            'clean': 'Unscented',
+            'ultra slick': 'Ultra Slick',
+            'natural': 'Natural',
+            'caf+[ei]+nated': 'Caffeinated',
+        }
+    ),
+
     'Palmolive': Sniffer(
         patterns={
             'Rinfrescante': 'Rinfrescante', # mentholated
@@ -1224,13 +1309,18 @@ _scent_pats = {
 
     'PannaCrema': Sniffer(
         patterns={
-            'nu[àa]via blue?': 'Nuàvia Blu',
-            'nu[àa]via (?:ross[ao]?|red)': 'Nuàvia Rossa',
-            'nu[àa]via nema': 'Nuàvia Nema',
-            'nu[àa]via (?:verde|green)': 'Nuàvia Verde',
+            'nu[àa]via *-? *blue?': 'Nuàvia Blu',
+            'nu[àa]via *-? *(?:ross[ao]?|red)': 'Nuàvia Rossa',
+            'nu[àa]via *-? *nema': 'Nuàvia Nema',
+            'nu[àa]via *-? *(?:verde|green)': 'Nuàvia Verde',
         },
         lowpatterns={
             'namaste': 'Namaste',
+            # used for matching maker on just Nuàvia
+            'blue?': 'Nuàvia Blu',
+            '(?:ross[ao]?|red)': 'Nuàvia Rossa',
+            'nema': 'Nuàvia Nema',
+            '(?:verde|green)': 'Nuàvia Verde',
         }
     ),
 
@@ -1334,10 +1424,10 @@ _scent_pats = {
             'aloe' + _any_and + 'vitamin e': 'Aloe & Vitamin E',
         },
         lowpatterns={
-            'green': 'Menthol & Eucalyptus',
-            'red': 'Sandalwood',
-            'white': 'Green Tea & Oatmeal',
-            'blue': 'Aloe & Vitamin E',
+            '(?:green|verde)': 'Menthol & Eucalyptus',
+            '(?:red|rosso)': 'Sandalwood',
+            '(?:white|bianco)': 'Green Tea & Oatmeal',
+            'blue?': 'Aloe & Vitamin E',
             'sandalwood': 'Sandalwood',
         }
     ),
@@ -1391,7 +1481,7 @@ _scent_pats = {
         patterns={
             _apostrophe + 'tis the saison': '\'Tis the Saison',
             'pan de muerto': 'Pan de Muerto',
-            'Frankincense, Anise' + _any_and + 'Orange': 'Pan de Muerto',
+            'Frankincense, Anise,?' + _any_and + 'Orange': 'Pan de Muerto',
         },
         lowpatterns={
             'cedar[^\w]+lime': 'Cedar-Lime',
@@ -1409,9 +1499,10 @@ _scent_pats = {
         },
         lowpatterns={
             'cosmo': 'Cosmo',
-            '70th anniver?sary': '70th Anniversary',
+            '70th(?: anniver?sary|)': '70th Anniversary',
             'desert ver?tiver': 'Desert Vetiver',
             'dolomiti': 'Dolomiti',
+            'stel+a alpin[ae]': 'Stella Alpina',
         },
         bases=[ 'beta 4.1', 'beta 4.2', 'beta 4.3', 'beta' ]
     ),
@@ -1500,20 +1591,19 @@ _scent_pats = {
             'tres matres': 'Tres Matres',
             'Grey Phetiver': 'Grey Phetiver',
             'Lycanthropy': 'Lycanthropy',
-            'foug[eèé]re n[ea]m[ea]ta': 'Fougere Nemeta',
+            'foug[èeé]re n[ea]m[ea]ta': 'Fougère Nemeta',
             'gr[ea]y phetiver': 'Grey Phetiver',
         },
         lowpatterns={
             'cedar': 'Cedar',
-            'autum[nm]? ash': 'Autumn Ash',
+            'autu?m[nm]? ash': 'Autumn Ash',
             'samhain': 'Samhain',
             'voa': 'Valley of Ashes',
+            'n[ea]m[ea]ta': 'Fougère Nemeta',
         }
     ),
 
-    'Spartium Natural Cosmetics': {
-        # TODO Meštar
-    },
+    #'Spartium Natural Cosmetics': # TODO Meštar
 
     'Spearhead Shaving Company': Sniffer(
         patterns={
@@ -1556,7 +1646,8 @@ _scent_pats = {
             'vanilla bean e[sx]presso': 'Vanilla Bean Espresso',
             '(?:scot' + _apostrophe + 's|scotch) pine sheep': 'Scots Pine Sheep',
             'electric sheep': 'Electric Sheep',
-            'vanilla sandalwood$': 'Vanilla Sandalwood'
+            'vanilla sandalwood$': 'Vanilla Sandalwood',
+            'meghalaya(?: *\\(SFWS\\)|)': 'Meghalaya',
         },
         lowpatterns={
             'spice': 'Stirling Spice',
@@ -1580,8 +1671,18 @@ _scent_pats = {
             'almond (?:creme|cream)': 'Almond Creme',
             'blood on steel': 'Tsuka', # renamed
             'sa[nm]d(?:al|le)wood': 'Sandalwood',
+            'one': 'Stirling One',
+            'grapefruit(?:\\(?with menthol\\)?|)': 'Grapefruit',
         },
-        bases=[ 'mutton', 'mutton tallow', 'glacial' ]
+        bases=[ 'mutton tallow', 'mutton', 'glacial' ]
+    ),
+
+    'Stone Cottage Soapworks': Sniffer(
+        lowpatterns={
+            'foug[èeé]re': 'Fougère',
+            'il barbiere': 'Il Barbiere',
+            'figg?' + _any_and + 'peare?': 'Figg & Peare',
+        }
     ),
 
     'Storybook Soapworks': Sniffer(
@@ -1632,11 +1733,15 @@ _scent_pats = {
             'field day': 'Field Day',
             'bell\\s*ringer': 'Bell Ringer',
             'cannonball!?': 'Cannonball!',
-            'Mountain Laurel': 'Mountain Laurel',
+            'mountain laurel': 'mountain laurel',
         },
         lowpatterns={
             'roty': 'ROTY 2020', # K1986
         }
+    ),
+
+    'The Swedish Witch': Sniffer(
+        bases=[ 'vegan' ]
     ),
 
     'Tabac': Sniffer(
@@ -1687,12 +1792,20 @@ _scent_pats = {
     '345 Soap Co.': Sniffer(
         lowpatterns={
             'white buffalo': 'White Buffalo',
-            'shark b(?:ite|ait)': 'Shark Bite',
+            'shark *b(?:ite|ait)': 'Shark Bite',
         }
     ),
 
     'La Toja': Sniffer(
         default_scent='La Toja',
+    ),
+
+    'Van der Hagen': Sniffer(
+        lowpatterns={
+            'unscented': 'Unscented',
+            'scented': 'Scented',
+            'deluxe': 'Deluxe',
+        },
     ),
 
     'Veleiro': Sniffer(
@@ -1729,7 +1842,7 @@ _scent_pats = {
         patterns={
             'gl[øo]gg': 'Gløgg',
             'grapefroot': 'Grapefroot',
-            'pear-brr+ shoppe': 'Pear-Brrr Shoppe',
+            'pear-brr+ shop+e?': 'Pear-Brrr Shoppe',
             'gatsby v2': 'Gatsby V2',
         },
         lowpatterns={
@@ -1786,14 +1899,17 @@ _scent_pats = {
             'bare siero': 'Unscented',
             'tim+erman+': 'Timmermann',
             'king of bourbon': 'King of Bourbon',
+            'fern concerto(?: \\(?mentholated\\)?|)': 'Fern Concerto',
         },
         lowpatterns={
             'eroe': 'Eroe',
             'yuzu/rose/patchouli': 'Yuzu/Rose/Patchouli',
             'y/r/p': 'Yuzu/Rose/Patchouli',
             'bare(?: naked|)': 'Unscented',
+            'kob': 'King of Bourbon',
+            'iced tea': 'Iced Tea',
         },
-        bases=[ 'bufala', 'siero' ]
+        bases=[ 'bufala', 'siero', 'vegan' ]
     ),
 
     'Wickham Soap Co.': Sniffer(
@@ -1821,6 +1937,13 @@ _scent_pats = {
         }
     ),
 
+    'Wilkinson Sword': Sniffer(
+        lowpatterns={
+            'stick': 'Stick', # stick said to have a different scent
+            '(?:blue +|in +|)bowl': 'Bowl', # I think bowls are all the same
+        }
+    ),
+
     'Williams Mug Soap': Sniffer(
         default_scent='Williams Mug Soap'
     ),
@@ -1844,7 +1967,7 @@ _scent_pats = {
             '(?:the |)healers': 'The Healers',
             '(?:the |)merchant': 'The Merchant',
         },
-        bases=[ 'sego shaving soap', 'sego' ]
+        bases=[ 'sego shaving soap', 'sego', 'vegan' ]
     ),
 }
 
@@ -1934,7 +2057,7 @@ def _internal_find( text: str, maker: str, patterndict: dict, best: dict ):
         return None
     bestlen = 0
     if best:
-        bestlen = best['result'].end() - best['result'].start()
+        bestlen = best['match'].end() - best['match'].start()
     for pattern in patterndict:
         if (pattern.match('') or pattern.match('cream') or pattern.match('soap')
                 or _simple_cream_soap_pat.match(patterndict[pattern])):
@@ -1943,7 +2066,7 @@ def _internal_find( text: str, maker: str, patterndict: dict, best: dict ):
             continue
         result = pattern.match(text)
         if result and (not best
-                or result.start() < best['result'].start()
+                or result.start() < best['match'].start()
                 or (result.end() - result.start() > bestlen)):
             best = {
                 'match': result,
@@ -1956,7 +2079,7 @@ def _internal_find( text: str, maker: str, patterndict: dict, best: dict ):
             is_unique = _unique_names[patterndict[pattern]] == 1
             result = pattern.search(text)
             if result and (not best
-                    or (is_unique and result.start() < best['result'].start())
+                    or (is_unique and result.start() < best['match'].start())
                     or (result.end() - result.start() > bestlen)):
                 best = {
                     'match': result,
@@ -1985,13 +2108,13 @@ def getSingleScent( maker ):
     return None
 
 
-not_cap_pattern = re.compile('(?:a|the|and|y|into|in|of|on|for|from|at|to|as|so|s|la|le|l|n|de|di|los)$', re.IGNORECASE)
+not_cap_pattern = re.compile('(?:a|the|and|y|into|in|of|on|for|from|at|to|as|so|s|la|le|l|n|de|di|los|da)$', re.IGNORECASE)
 
 def title_case( text: str ):
     tctext = ''
     pos = 0
     inword = len(text) > 0 and str.isalpha(text[0])
-    text = text.replace('&#39;', "'")
+    text = text.replace('&#39;', "'").replace('&amp;', '&')
     # recognize ALL CAPS STRING AS DISTINCT from distinct WORDS in all caps
     # however a short single word could be an acronym
     allcaps = str.isupper(text)
