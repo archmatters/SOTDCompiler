@@ -254,7 +254,11 @@ def cleanAndMatchScent( lather: LatherMatch ):
     # proportion of text matched (including base name)
     # ALSO, note that if we match a base, but not scent, that should
     # be a smaller confidence boost, but is treated the same!
+    # TODO #2 if matching fails with text after the maker,
+    # try the text before... but check all code paths into
+    # this function.
     if result and result['match']:
+        lather.maker = result['maker']
         lather.scent = result['scent']
         lather.context += 'X'
         lather.confidence += 4

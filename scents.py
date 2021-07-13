@@ -6,12 +6,15 @@ _simple_cream_soap_pat = re.compile('^(?:shav(?:ing|e) |)(?:soap|cream)$')
 _any_pattern = re.compile('.*')
 
 _apostrophe = '(?:\'|&#39;|’|)'
-_any_and = '\\s*(?:&(?:amp;|)|and|\+)\\s*'
+_any_and = '\\s*(?:&(?:amp;|)|and|\+|)\\s*'
 _prefix = '\\b'
 _suffix = '\\b[\\.,]?'
 
 _unique_names = { }
 _compiled_pats = None
+
+def _default_custom( map ):
+    return map
 
 class Sniffer:
     """ A class to handle scent matching.
@@ -39,10 +42,10 @@ class Sniffer:
         if custom:
             self.custom = custom
         else:
-            self.custom = None
+            self.custom = _default_custom
         self._compile(lowpatterns, patterns, bases)
-    
-    
+
+
     def _compile( self, lowpatterns: dict, highpatterns: dict, bases: list ):
         allnames = [ ]
         if lowpatterns:
@@ -165,6 +168,34 @@ class Sniffer:
     # return { 'maker': 'Maker Name', 'scent': 'Scent Name', 'lather': 'Lather text' }
     def match_unknown( self, full_text: str ):
         return None
+
+
+def custom_apr( map ):
+    if map['maker'] == 'Australian Private Reserve':
+        if map['scent'] == 'Carnivale' or map['scent'] == 'Fresca Intensa':
+            map['maker'] = 'Storybook Soapworks'
+    return map
+
+def custom_chatillon_lux( map ):
+    if map['maker'] == 'Chatillon Lux':
+        so = _compiled_pats['Declaration Grooming']
+        result = so.match_on_maker(map['scent'])
+        if result:
+            return result
+    raise Exception('Chatillon Lux is NOT a soapmaker!')
+
+def custom_summer_break( map ):
+    if map['scent'] == 'Mountain Laurel':
+        map['maker'] = 'London Razors'
+    return map
+
+def custom_chicago_groom( map ):
+    if map['scent'] == 'Pear-Brrr Shoppe':
+        map['maker'] = 'West Coast Shaving'
+    if map['scent'] == 'Timeless Razor':
+        map['maker'] = 'Timeless Razor'
+    return map
+
 
 _scent_pats = {
     'Abbate y la Mantia': Sniffer(
@@ -290,8 +321,7 @@ _scent_pats = {
             'carnivale?': 'Carnivale', # actually Storybook Soapworks
             'fresca intensa': 'Fresca Intensa', # actually Storybook Soapworks
         },
-        # TODO special rules for Carnivale and Fresca Intensa
-        # which are made under the Storybook Soapworks brand
+        custom=custom_apr
     ),
 
     'Aveeno': Sniffer(
@@ -522,6 +552,13 @@ _scent_pats = {
             'bar?bershop': 'Grandpa\'s Barbershop',
             'saw': 'The Saw',
         }
+    ),
+
+    'Chatillon Lux': Sniffer(
+        lowpatterns={
+            'weinstra(?:ss|ß)e': 'Weinstrasse',
+        },
+        custom=custom_chatillon_lux
     ),
 
     'Chicago Grooming Co.': Sniffer(
@@ -1108,7 +1145,7 @@ _scent_pats = {
             'limes' + _any_and + 'bergamot': 'Limes & Bergamot',
             'tobacco' + _any_and + 'leather': 'Tobacco & Leather',
             'lilac': 'Lilac',
-            'orange menthol': 'Orange Menthol',
+            'orange' + _any_and + 'menthol': 'Orange Menthol',
         }
     ),
 
@@ -1737,7 +1774,8 @@ _scent_pats = {
         },
         lowpatterns={
             'roty': 'ROTY 2020', # K1986
-        }
+        },
+        custom=custom_summer_break
     ),
 
     'The Swedish Witch': Sniffer(
@@ -2023,17 +2061,22 @@ def match_scent( maker, scent ):
         raise Exception(f"Maker '{maker}' not Sniffer!")
     result = so.match_on_maker(scent)
     if result:
+        result = so.custom(result)
         return result
     nobase = so.strip_base(scent)
+    # TODO even when base not present, we eventually
+    # want to run custom code, but we need to return to
+    # the caller here... rethink how this works
     if nobase == scent:
         return None
-    return {
+    result = {
             'match': None,
             'maker': maker,
             'scent': title_case(nobase),
             'lather': None,
             'search': False
         }
+    return so.custom(result)
 
 
 def findAnyScent( text ):
@@ -2041,12 +2084,11 @@ def findAnyScent( text ):
     best = None
     for maker in _compiled_pats:
         so = _compiled_pats[maker]
-        if isinstance(so, Sniffer):
-            result = _internal_find(text, maker, so.highpatterns, best)
-        else:
-            result = _internal_find(text, maker, so, best)
+        if not isinstance(so, Sniffer):
+            raise Exception(f"Maker '{maker}' is not Sniffer!")
+        result = _internal_find(text, maker, so.highpatterns, best)
         if result:
-            best = result
+            best = so.custom(result)
 
     return best
 
