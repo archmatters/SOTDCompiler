@@ -25,7 +25,7 @@ lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         |
             pre[\\- ]?shave/(?:soap|cream)/(?:balm|after[\\- ]?shave|splash)
         )[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('''(?:\\s*[\\-,]\\s+(?:soap|cream)
+type_suffix_pattern = re.compile('''\\s*[\\-,](?:\\s+(?:soap|cream)
         |\\s+shav(?:ing|e)\\s+(?:soap|cream)
         |\\s+soap|\\s+cream|\\s+\\(soap\\)
         |\\s+(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$''', re.IGNORECASE | re.VERBOSE)
@@ -335,6 +335,8 @@ def scanBody( tlc, silent = False ):
         elif lather.maker:
             lather.confidence -= 1
         else:
+            # TODO find a better place to do this
+            lather.lather = lather.lather.replace('&#39;', '\'').replace('&amp;', '&')
             pos = lather.lather.find(' - ')
             if pos < 0:
                 pos = lather.lather.find(' – ')

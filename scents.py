@@ -9,6 +9,8 @@ _apostrophe = '(?:\'|&#39;|’|)'
 _any_and = '\\s*(?:&(?:amp;|)|and|\+|)\\s*'
 _prefix = '\\b'
 _suffix = '\\b[\\.,]?'
+# same as in scanner; need to deduplicate
+_separator_pattern = re.compile('\\s*(?:\\\\?-+|–|:|,|\\.|\\|)\\s*')
 
 _unique_names = { }
 _compiled_pats = None
@@ -101,6 +103,9 @@ class Sniffer:
                 else:
                     pos = len(text)
             if stripped:
+                result = _separator_pattern.match(stripped)
+                if result:
+                    stripped = stripped[result.end():].strip()
                 return stripped
         return text
 
@@ -265,10 +270,10 @@ _scent_pats = {
             'which one' + _apostrophe + 's pink\\??': 'Which One\'s Pink?',
             'grecian(?: horse|)': 'Grecian Horse',
             '\\(?\\s*little fictions\\s*\\)?(?:' + _any_and + 'gr[ea]y matter|)': 'Little Fictions',
-            'vanille de tabac': 'Vanille de Tabac',
+            'vanill[ea] de tabac': 'Vanille de Tabac',
             'asian plum': 'Asian Plum',
             'asian pear': 'Asian Pear',
-            'cannablis+ santal': 'Cannabliss Santal',
+            'can+ablis+ santal': 'Cannabliss Santal',
             'barbiere sofistic[as]to': 'Barbiere Sofisticato',
             'Sofistacato Barbiere': 'Barbiere Sofisticato',
             'pedro fiasco': 'Pedro Fiasco',
@@ -503,7 +508,7 @@ _scent_pats = {
             'un jour gris': 'Un Jour Gris',
             'tonsorial parlour': 'Tonsorial Parlour',
             'le march[éeè] du ras+age': 'Le Marché du Rasage',
-            'm[éeè]nage (?:à|a|á|de) lavande': 'Ménage à Lavande',
+            'm[éeè]nage (?:à|a|á|de) lav[ae]nder?': 'Ménage à Lavande',
             'Blug[èeé]re': 'Blugère',
             'vintage (?:for |)(?:serf|s\\.e\\.r\\.f\\.)': 'Vintage S.E.R.F.',
         },
@@ -707,6 +712,9 @@ _scent_pats = {
             'flowers in the dark': 'Flowers in the Dark',
             'death or glory': 'Death or Glory',
             'victory or death': 'Victory or Death',
+        },
+        lowpatterns={
+            'lemongrass' + _any_and + 'geranium': 'Lemongrass & Geranium',
         },
         bases=[ 'vol. 2', 'vol. 3', 'essentials' ] # Essentials not actually a base, but class of soap
     ),
@@ -1312,6 +1320,13 @@ _scent_pats = {
         patterns={
             'la salvia 4': 'Una Salvia 4',
             'la salvia': 'Una Salvia',
+        }
+    ),
+
+    'Osma': Sniffer(
+        lowpatterns={
+            'rasage': 'Rasage',
+            'tradition(?:al|)': 'Tradition',
         }
     ),
 
@@ -2064,6 +2079,12 @@ def match_scent( maker, scent ):
         result = so.custom(result)
         return result
     nobase = so.strip_base(scent)
+    if nobase != scent:
+        result = so.match_on_maker(scent)
+        if result:
+            result = so.custom(result)
+            return result
+
     # TODO even when base not present, we eventually
     # want to run custom code, but we need to return to
     # the caller here... rethink how this works

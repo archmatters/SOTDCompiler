@@ -118,8 +118,8 @@ _maker_pats = {
 
     'central (?:texas|tx) (?:soaps?|)': 'Central Texas Soaps',
 
-    'chicago groom\\w+' + _opt_company + '(?:\\((?:form(?:er|al)ly|) *oleo\\b[^)]*\\)?|)' + _any_and + 'wcs': 'West Coast Shaving',
-    'chicago groom\\w+' + _opt_company + '(?:\\((?:formerly|formally|fr\\.?|) *oleo\\b[^)]*\\)?|)': 'Chicago Grooming Co.',
+    'chicago groom\\w+' + _opt_company + '(?:\\((?:form(?:er|al)ly|) *oleo *(?:soapworks|soaps?|)\\)?|)' + _any_and + 'wcs': 'West Coast Shaving',
+    'chicago groom\\w+' + _opt_company + '(?:\\((?:formerly|formally|fr\\.?|) *oleo *(?:soapworks|soaps?|)\\)?|)': 'Chicago Grooming Co.',
     'oleo *(?:soapworks|soaps?|)' + _any_and + 'west coast shaving': 'West Coast Shaving',
     'oleo' + _any_and + '(?:that darn rob|tdr\\b|chisel' + _any_and + 'hound)': 'Chicago Grooming Co.',
     'oleo *(?:soapworks|soaps?|)' + _any_and + 'chicago grooming' + _opt_company: 'Chicago Grooming Co.',
@@ -192,8 +192,6 @@ _maker_pats = {
     'dr.? k soap' + _opt_company: 'Dr K Soap Company',
 
     'dr\\.? selby': 'Dr. Selby',
-
-    'edwin jagg[ea]r': 'Edwin Jagger',
 
     'eleven(?: shaving|)': 'Eleven Shaving',
 
@@ -425,6 +423,8 @@ _maker_pats = {
     '1000' + _any_and + '1 seife': '1000&1 Seife',
 
     'opus ruri': 'Opus Ruri',
+
+    '(?:bloc *|)osma': 'Osma',
 
     'p\\.?160': 'P.160',
 
@@ -671,7 +671,7 @@ _hw_maker_pats = {
     '@declarationgrooming': 'Declaration Grooming',
     'declaration\\s*(?:grooming?|)': 'Declaration Grooming',
     'dec\\.? grooming': 'Declaration Grooming',
-    'edwin jagg[ea]r': 'Edwin Jagger',
+    'edwin jagg[ea]r *(?:shav(?:ing|e) soap|)': 'Edwin Jagger',
     'fendrihan': 'Fendrihan',
     'fine accoutrements': 'Fine Accoutrements',
     'gillette': 'Gillette',
