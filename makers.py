@@ -2,7 +2,7 @@
 
 import re
 
-_any_and = '\\s*(?:&(?:amp;|)|and|\\+|/|×|x|X|-)\\s*'
+_any_and = '\\s*(?:&(?:amp;|)|and|\\+|/|×|x|X|-|%)\\s*'
 _apostrophe = '(?:\'|&#39;|’|)'
 _opt_company = '\\s*(?:company|co\\.?|)\\s*'
 
@@ -184,6 +184,8 @@ _maker_pats = {
     'maggard(?: *razors|' + _apostrophe + 's|)' + _any_and + 'declaration(?: grooming|)': 'Declaration Grooming',
     'l' + _any_and + 'l(?:/declaration|) grooming': 'Declaration Grooming',
     'l' + _any_and + 'l\\s*\\(declaration\\)(?: grooming|)': 'Declaration Grooming',
+    'house of mammoth' + _any_and + 'declaration(?: grooming|)': 'Declaration Grooming',
+    'declaration(?: grooming|)' + _any_and + '(?:house of mammoth|hom)': 'Declaration Grooming',
 
     'dindi naturals': 'Dindi Naturals',
 
@@ -472,7 +474,7 @@ _maker_pats = {
     'pr[éeè] de provence': 'Pré de Provence',
 
     'pro(?:ro?as+o|saro)': 'Proraso',
-    'p(?:ro|or)aso': 'Proraso',
+    'p(?:ro|or)asa?o': 'Proraso',
 
     'prosar': 'Prosar',
 
@@ -503,7 +505,7 @@ _maker_pats = {
     'saponificio +bignoli(?: +c\\.? +galliate| +carlo|)': 'Saponificio Bignoli',
     's\\.? *c\\.? *bignoli': 'Saponificio Bignoli',
 
-    'saponificio\\s*va?r[ei]sino': 'Saponificio Varesino',
+    'saponificio\\s*v[ae]?r[ei]sino': 'Saponificio Varesino',
     'saponifici?o\\s*varen?s[ie]n?i?o': 'Saponificio Varesino',
 
     '(?:the |)savage homestead': 'The Savage Homestead',
@@ -581,10 +583,6 @@ _maker_pats = {
     '(?:the|)\\s*sudsy soap[ae]ry?': 'The Sudsy Soapery',
     'soapy sudsery': 'The Sudsy Soapery',
     'sudsy' + _apostrophe + 's soapery': 'The Sudsy Soapery',
-
-    'london razors' + _any_and + '(?:summer break(?: soaps?|)|sbs)' : 'Summer Break Soaps',
-    'london razors' : 'Summer Break Soaps',
-    'summer break(?: soaps?|)' + _any_and + 'london razors' : 'Summer Break Soaps',
 
     'svoboda': 'Svoboda',
     'свобода': 'Svoboda',
@@ -691,6 +689,7 @@ _hw_maker_pats = {
     '@declarationgrooming': 'Declaration Grooming',
     'declaration\\s*(?:grooming?|)': 'Declaration Grooming',
     'dec\\.? grooming': 'Declaration Grooming',
+    'dollar *shave *club': 'Dollar Shave Club',
     'edwin jagg[ea]r *(?:shav(?:ing|e) soap|)': 'Edwin Jagger',
     'fendrihan': 'Fendrihan',
     'fine accoutrements': 'Fine Accoutrements',
@@ -700,6 +699,9 @@ _hw_maker_pats = {
     'k shave wor(?:x|ks)': 'K Shave Worx',
     'karve(?: shaving' + _opt_company + '|)': 'Karve Shaving Co.',
     '(?:gb |)kent': 'Kent',
+    'london razors': 'London Razors',
+    'london razors' + _any_and + '(?:summer break(?: soaps?|)|sbs)' : 'London Razors',
+    'summer break(?: soaps?|)' + _any_and + 'london razors' : 'London Razors',
     'maggard' + _apostrophe + 's?\\s*(?:razors?|)': 'Maggard Razors',
     'm[üu]hle': 'Mühle',
     'olivina(?: men|)': 'Olivina Men',
@@ -758,6 +760,7 @@ _abbrev_pats = {
     'cf' + _any_and + 'zoologist': 'Chiseled Face',
     'crsw': 'Cold River Soap Works',
     'dg' + _any_and + 'cl': 'Declaration Grooming',
+    'dg' + _any_and + 'hom': 'Declaration Grooming',
     'l' + _any_and + 'l': 'Declaration Grooming',
     'e' + _any_and + 's': 'E&S', # TODO some company in France
     'esc': 'Executive Shaving',

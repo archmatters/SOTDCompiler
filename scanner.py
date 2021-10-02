@@ -333,7 +333,11 @@ def scanBody( tlc, silent = False ):
             lather.context += '1'
             lather.confidence += 2
         elif lather.maker:
-            lather.confidence -= 1
+            result = scents.match_scent(lather.maker, lather.scent)
+            if result:
+                lather.scent = result['scent']
+            else:
+                lather.confidence -= 1
         else:
             # TODO find a better place to do this
             lather.lather = lather.lather.replace('&#39;', '\'').replace('&amp;', '&')

@@ -12,6 +12,9 @@ _suffix = '\\b[\\.,]?'
 # same as in scanner; need to deduplicate
 _separator_pattern = re.compile('\\s*(?:\\\\?-+|–|:|,|\\.|\\|)\\s*')
 
+_fougere = 'foug[èeé]re'
+_sandalwood = 'sand(?:al|le)wood'
+
 _unique_names = { }
 _compiled_pats = None
 
@@ -221,6 +224,11 @@ def custom_chicago_groom( map ):
 def custom_ariana_evans( map ):
     if map['scent'] == 'Passiflora':
         map['maker'] = 'Barrister and Mann'
+    return map
+
+def custom_mammoth( map ):
+    if map['scent'] == 'Cerberus':
+        map['maker'] = 'Declaration Grooming'
     return map
 
 
@@ -555,6 +563,7 @@ _scent_pats = {
             'm[éeè]nage (?:à|a|á|de) lav[ae]nder?': 'Ménage à Lavande',
             'Blug[èeé]re': 'Blugère',
             'vintage (?:for |)(?:serf|s\\.e\\.r\\.f\\.)': 'Vintage S.E.R.F.',
+            'dirty prose': 'Dirty Prose',
         },
         lowpatterns={
             'cool' + _any_and + 'fresh': 'Cool and Fresh',
@@ -563,7 +572,7 @@ _scent_pats = {
             'Maggard Razors 2019 Meetup': 'Maggard Razors 2019 Meetup',
             'Maggard Meet(?:up|) 2017': 'Maggard Razors 2017 Meetup',
             'Maggard Razors 2017 Meetup': 'Maggard Razors 2017 Meetup',
-            'la terre verte?': 'La Terre Verte',
+            'la terr[ea] verte?': 'La Terre Verte',
             'lmr': 'Le Marché du Rasage',
             'gla[cd][ée] herbe?': 'Glacé Herbe',
         },
@@ -728,11 +737,13 @@ _scent_pats = {
             'lamplight pen+ance': 'Lamplight Penance',
             'weinstra(?:ss|ß)e': 'Weinstrasse',
             '88 chest?nut st(?:reet|\\.|)': '88 Chestnut Street',
+            '(?:fou?rth|4th)' + _any_and + 'pine': 'Fourth and Pine',
             'l[ae] petite? prai?rie': 'La Petite Prairie',
             'sunrise on lasalle': 'Sunrise on LaSalle',
             'tsm foug[èeé]re': 'TSM Fougère',
             'darkfall': 'Darkfall',
             'scrumtrules?cent': 'Scrumtrulescent',
+            '(?:cerberus|cerebrus)': 'Cerberus',
         },
         lowpatterns={
             'sellout': 'Sellout',
@@ -791,6 +802,15 @@ _scent_pats = {
         }
     ),
 
+    'Edwin Jagger': Sniffer(
+        lowpatterns={
+            'limes?' + _any_and + 'pom[ea]gran[ai]te': 'Limes & Pomegranate',
+            'aloe vera': 'Aloe Vera',
+            'sandalwood': 'Sandalwood',
+            'menthol': 'cooling menthol',
+        }
+    ),
+
     'Eleven Shaving': Sniffer(
         patterns={
             'olive, musk' + _any_and + 'citrus': 'Olive, Musk & Citrus',
@@ -799,6 +819,7 @@ _scent_pats = {
             'barbershop': 'Barbershop',
             'clary sage' + _any_and + 'violet': 'Clary Sage & Violet',
             'clary sage': 'Clary Sage & Violet',
+            'DFS (?:limited edition|le)(?: 2019|)': 'DFS LE 2019',
         }
     ),
 
@@ -826,12 +847,14 @@ _scent_pats = {
             # or... should all Eufros soaps be identified as "JabonMan?"
             'mediterr[áa]no l\\.e\\. bullgoose': 'Mediterráneo',
             'mediterr[áa]ne?o': 'Mediterráneo',
+            'tier+a humeda': 'Tiera Humeda',
         },
         lowpatterns={
             'ylang[ \\-]ylang': 'Ylang Ylang',
             'Gea': 'Gea',
             'Tobacco': 'Tobacco',
-        }
+        },
+        bases = [ 'vegan' ]
     ),
 
     'Executive Shaving': Sniffer(
@@ -1113,9 +1136,12 @@ _scent_pats = {
             'indigo': 'Mood Indigo',
             'marine': 'Marine',
             'z': 'Z',
-            '(?:the )tob+ac+[oa]nist': 'Tobacconist'
+            '(?:the )tob+ac+[oa]nist': 'Tobacconist',
+            '(?:cerberus|cerebrus)': 'Cerberus', # actually DG
+            'em?brace': 'Embrace',
         },
-        bases=[ 'tusk' ]
+        bases=[ 'tusk' ],
+        custom=custom_mammoth
     ),
 
     'Hub City Soap Company': Sniffer(
@@ -1398,6 +1424,14 @@ _scent_pats = {
         default_scent='Sapone da Barba'
     ),
 
+    'Officina di Santa Maria Novella': Sniffer(
+        lowpatterns={
+            'crema da barba': 'Crema da Barba',
+            'tabacco toscano': 'Tabacco Toscano',
+        },
+        default_scent='Crema da Barba'
+    ),
+
     'Ogallala Bay Rum': Sniffer(
         lowpatterns={
             '(?:bay rum|),? *sage,?' + _any_and + 'cedar': 'Bay Rum, Sage & Cedar',
@@ -1519,10 +1553,11 @@ _scent_pats = {
             'Atomic Age Bay Rum': 'Atomic Age Bay Rum',
             'lavender planet': 'Lavender Planet',
             'bailey' + _apostrophe + 's irish coffee': 'Bailey\'s Irish Coffee',
-            'doppelg[äa]nger grey': 'Doppelgänger Grey',
-            'doppelg[äa]nger black': 'Doppelgänger Black',
-            'doppelg[äa]nger orange': 'Doppelgänger Orange',
-            'doppelg[äa]nger ox blood': 'Doppelgänger Ox Blood',
+            'doppelg[äa]nger gr[ea]y(?: label|)': 'Doppelgänger Grey',
+            'doppelg[äa]nger gold(?: label|)': 'Doppelgänger Gold',
+            'doppelg[äa]nger black(?: label|)': 'Doppelgänger Black',
+            'doppelg[äa]nger orange(?: label|)': 'Doppelgänger Orange',
+            'doppelg[äa]nger ox blood(?: label|)': 'Doppelgänger Ox Blood',
         },
         lowpatterns={
             'cad': 'CaD',
@@ -1600,6 +1635,7 @@ _scent_pats = {
             'what the puck[\W]*\\s+gold': 'What the Puck?! Gold Label',
             'what the puck[\W]*\\s+green': 'What the Puck?! Green Label',
             'mudder focker': 'Mudder Focker',
+            'Santa Maria del Fiore': 'Santa Maria del Fiore',
         },
         lowpatterns={
             'blue\\s*': 'Blue Barbershop',
@@ -1701,6 +1737,13 @@ _scent_pats = {
             'lady luck': 'Lady Luck',
             'fig' + _any_and + 'apricot': 'Fig & Apricot',
         },
+    ),
+
+    'SHAVE DANDY': Sniffer(
+        lowpatterns={
+            'Pino N[ei]ro': 'Pino Nero',
+            'cosmic stash': 'Cosmic Stash',
+        }
     ),
 
     'Signature Soaps': Sniffer(
@@ -2012,7 +2055,8 @@ _scent_pats = {
     'Vicco': Sniffer(
         lowpatterns={
             'turmeric': 'Turmeric',
-            'S with sandalwood oil': 'Turmeric S with Sandalwood Oil'
+            't[ue]rmeric *(?:s? with|)sandalwood': 'Turmeric S with Sandalwood Oil',
+            's with sandalwood oil': 'Turmeric S with Sandalwood Oil',
         }
     ),
 
@@ -2101,6 +2145,8 @@ _scent_pats = {
             'king of bourbon': 'King of Bourbon',
             'fern concerto(?: \\(?mentholated\\)?|)': 'Fern Concerto',
             'king of Oud': 'King of Oud',
+            'lav sublime concerto': 'Lav Sublime Concerto',
+            'lav sublime': 'Lav Sublime',
         },
         lowpatterns={
             'eroe': 'Eroe',

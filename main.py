@@ -2,27 +2,35 @@
 
 import argparse
 import json
+import re
 from datetime import date, timedelta, datetime
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
 
 import praw
+from prawcore.exceptions import NotFound
 
 import scanner
 
 class Mode(Enum):
-    INCREMENTAL = 0
-    COMPILE = 1
+    INCREMENTAL = auto()
+    COMPILE = auto()
+    ONE = auto()
 
 aparser = argparse.ArgumentParser(description='Load SOTD data from r/Wetshaving')
-aparser.add_argument('command', choices=['compile', 'comp', 'incremental', 'inc'],
-        help='Specify the command; a monthly compilation or incremental update.')
+aparser.add_argument('command', choices=['compile', 'comp', 'incremental', 'inc', 'one'],
+        help='Specify the command; a monthly compilation, incremental update, or single post.')
+aparser.add_argument('--id', help='Specify the post ID for mode "one."')
 aparser.add_argument('--delimiter', choices=[',', 'comma', '\\t', 'tab'],
         help='Specify the CSV delimiter for compilation only.')
 aparser.add_argument('--month', metavar='{mm|yyyy-mm}',
         help='Specify the month (current year) or month and year.\n'
         'The default is to compile data for the previous month, or perform\n'
         'an incremental update for the current month.')
+aparser.add_argument('--live', action='store_true',
+        help='Look for posts on Reddit, not in file cache (compilation only).')
+aparser.add_argument('--date', 
+        help='Specify a post date ("one" mode only).')
 args = aparser.parse_args()
 
 if args.command in [ 'comp', 'compile' ]:
@@ -32,9 +40,19 @@ if args.command in [ 'comp', 'compile' ]:
     elif args.delimiter in [ '\t', '\\t', 't', 'tab' ]:
         arg_delimiter = '\t'
     else:
-        raise SystemExit(f"Missing or invalid delimiter: select tab or comma with --delimiter.")
+        raise SystemExit("Missing or invalid delimiter: select tab or comma with --delimiter.")
 elif args.command in [ 'inc', 'incremental' ]:
     arg_mode = Mode.INCREMENTAL
+elif args.command in [ 'one' ]:
+    arg_mode = Mode.ONE
+    if not args.id or not args.date:
+        raise SystemExit("You must specify the post ID and date when using mode \"one\"")
+    result = re.match('^(\\d{4})[\\-\\.]?(\\d{,2})[\\-\\.]?(\\d{,2})', args.date)
+    if not result:
+        raise SystemExit(f"Post date '{args.post_date}' not in a valid format")
+    arg_date = date(int(result.group(1)), int(result.group(2)), int(result.group(3)))
+    if arg_date.year < 2020 or arg_date > date.today():
+        raise SystemExit(f"Post date '{args.post_date}' is not expected: too early or in the future")
 else:
     raise SystemExit(f"Invalid command \"{args['command']}\" specified.")
 
@@ -157,14 +175,39 @@ def update_cache_comments( cached: list, reddit_comments ):
             updated = True
     return updated
 
+
+def comp_from_file():
+    # TODO duplicate detection:
+    # same lather info & posts within a few minutes of each other (10?)
+    # or same lather & posts to multiple threads on the same day
+    file_pat = re.compile('^(\\d{4})-(\\d\\d)-(\\d\\d)-(\\w+).json$')
+    post_proc_count = 0
+    comment_count = 0
+    for fp in Path('postdata').glob("*json"):
+        result = file_pat.match(fp.name)
+        if not result or sotd_year != int(result.group(1)) or sotd_month != int(result.group(2)):
+            continue
+        post_date = date(int(result.group(1)), int(result.group(2)), int(result.group(3)))
+        comments = get_cached_comments(result.group(4), post_date)
+        if not comments:
+            print(f"ERROR: failed to load comments from '{fp}'")
+        else:
+            post_proc_count += 1
+        for cmt in comments:
+            comment_count += 1
+            scanner.scanComment(cmt, post_date, dataFile, arg_delimiter)
+    print(f"Processed {comment_count} comments in {post_proc_count} files.")
+
+
+
 # if incremental: loop over posts until you go back one week, or two days prior to last known
-# TODO see if new comments have been posted
 # if compile: visit all posts in one month
 def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
+    limit_days = 10
     post_count = 0
     post_proc_count = 0
-    inc_limit = date.today() - timedelta(days=14)
-    last_inc_loaded = None
+    inc_limit = date.today() - timedelta(days=limit_days)
+    last_inc_loaded = date.today()
     for post in subreddit.hot(limit=None):
         post_count += 1
         post_date = scanner.get_sotd_date(post)
@@ -176,8 +219,10 @@ def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
                 continue
             #elif post_date >= inc_limit:
                 # TODO merge
-            elif post_date <= inc_limit and (not last_inc_loaded or (last_inc_loaded
-                        and post_date < last_inc_loaded - timedelta(days=7))):
+            elif abs((last_inc_loaded - post_date).days) > 3 * limit_days:
+                print(f'Weird date on {post.id} "{post.title}"; skipping.')
+                continue
+            elif post_date <= inc_limit and (last_inc_loaded - post_date).days > 7:
                 print('Looks like we\'re finished loading.')
                 break
             else:
@@ -197,6 +242,9 @@ def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
                     last_inc_loaded = post_date
                     print(f"Saved {len(post.comments)} comments from {post.title}.")
         elif mode == Mode.COMPILE:
+            # TODO duplicate detection:
+            # same lather info & posts within a few minutes of each other (10?)
+            # or same lather & posts to multiple threads on the same day
             if post_date.year < sotd_year or (post_date.month < sotd_month
                     and post_date.year == sotd_year):
                 print('Complete.')
@@ -225,9 +273,42 @@ def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
 reddit = praw.Reddit(site_name='SOTDScanner')
 wssub = reddit.subreddit('Wetshaving')
 
-if arg_mode == Mode.COMPILE:
+if arg_mode is Mode.COMPILE:
     with open(file='sotd-{:0>4}-{:0>2}.csv'.format(sotd_year, sotd_month),
             mode='w', encoding='utf8') as dataFile:
-        do_the_work(wssub, arg_mode)
-elif arg_mode == Mode.INCREMENTAL:
+        # TODO put this together with scanner.scanComment(...)
+        headers = [ 'Date', 'Time', 'Author', 'Maker', 'Scent', 'Confidence',
+                'Lather', 'ID', 'Plaintext', 'URL' ]
+        if arg_delimiter == ',':
+            dataFile.write('"')
+        for i in range(len(headers)):
+            if arg_delimiter == '\t' and i >= 8:
+                continue
+            if i > 0:
+                if arg_delimiter == ',':
+                    dataFile.write('","')
+                else:
+                    dataFile.write(arg_delimiter)
+            dataFile.write(headers[i])
+        if arg_delimiter == ',':
+            dataFile.write('"')
+        dataFile.write('\n')
+        # end TODO
+        if args.live:
+            do_the_work(wssub, arg_mode)
+        else:
+            comp_from_file()
+elif arg_mode is Mode.INCREMENTAL:
     do_the_work(wssub, arg_mode)
+elif arg_mode is Mode.ONE:
+    post = reddit.submission(id=args.id)
+    if post:
+        try:
+            # copied from do_the_work
+            ensure_loaded(post)
+            save_comments_to_cache(post.id, arg_date, post.comments)
+            print(f"Saved {len(post.comments)} comments from {post.title}.")
+        except NotFound as e:
+            print("The post was not found: " + str(e))
+    else:
+        print(f"No post found for {args.post_id}")
