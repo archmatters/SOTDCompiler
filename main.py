@@ -31,6 +31,8 @@ aparser.add_argument('--live', action='store_true',
         help='Look for posts on Reddit, not in file cache (compilation only).')
 aparser.add_argument('--date', 
         help='Specify a post date ("one" mode only).')
+aparser.add_argument('--days', default=5,
+        help='Specify how many days to go back (incremental mode only).')
 args = aparser.parse_args()
 
 if args.command in [ 'comp', 'compile' ]:
@@ -43,6 +45,8 @@ if args.command in [ 'comp', 'compile' ]:
         raise SystemExit("Missing or invalid delimiter: select tab or comma with --delimiter.")
 elif args.command in [ 'inc', 'incremental' ]:
     arg_mode = Mode.INCREMENTAL
+    if args.days < 1:
+        raise SystemExit("Days to check must be a positive integer.")
 elif args.command in [ 'one' ]:
     arg_mode = Mode.ONE
     if not args.id or not args.date:
@@ -203,7 +207,7 @@ def comp_from_file():
 # if incremental: loop over posts until you go back one week, or two days prior to last known
 # if compile: visit all posts in one month
 def do_the_work( subreddit: praw.models.Subreddit, mode: Mode ):
-    limit_days = 10
+    limit_days = args.days
     post_count = 0
     post_proc_count = 0
     inc_limit = date.today() - timedelta(days=limit_days)
