@@ -14,7 +14,7 @@ lather_pattern = re.compile('''(?:^|[\n])[^a-z0-9]*
         (?:soap/lather|lath?er|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|softw[ae]re)\\b
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)
-        (?!\\s*games)[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
+        (?!\\s*games)[\\W_]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
 lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         (?:
             (?:(?<!\\#)shave\\b)
@@ -25,10 +25,10 @@ lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         |
             pre[\\- ]?shave/(?:soap|cream)/(?:balm|after[\\- ]?shave|splash)
         )[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('''\\s*[\\-,](?:\\s+(?:soap|cream)
+type_suffix_pattern = re.compile('''\\s*\\(?(?:\\s*(?:soap|cream)
         |\\s+shav(?:ing|e)\\s+(?:soap|cream)
         |\\s+soap|\\s+cream|\\s+\\(soap\\)
-        |\\s+(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\s*$''', re.IGNORECASE | re.VERBOSE)
+        |\\s+(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\)?\\s*$''', re.IGNORECASE | re.VERBOSE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|–|:|,|\\.|\\|)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
@@ -192,6 +192,20 @@ def scentFirst( body: str, lather: str ):
     return result
 
 
+def strip_separators( text: str ):
+    lpos = 0
+    while lpos < len(text):
+        result = separator_pattern.search(text, lpos)
+        if result:
+            if result.start() == 0:
+                text = text[result.end():]
+            elif result.end() == len(text):
+                text = text[0:result.start()]
+            lpos = result.end()
+        else:
+            lpos = len(text)
+    return text
+
 def cleanAndMatchScent( lather: LatherMatch ):
     text = lather.scent
     lpos = text.find('](')
@@ -209,18 +223,7 @@ def cleanAndMatchScent( lather: LatherMatch ):
             text = text[0:lpos]
 
     text = removeMarkdown(text)
-
-    lpos = 0
-    while lpos < len(text):
-        result = separator_pattern.search(text, lpos)
-        if result:
-            if result.start() == 0:
-                text = text[result.end():]
-            elif result.end() == len(text):
-                text = text[0:result.start()]
-            lpos = result.end()
-        else:
-            lpos = len(text)
+    text = strip_separators(text)
 
     text = text.strip()
     if text.endswith('.') or text.endswith(','):
@@ -232,7 +235,15 @@ def cleanAndMatchScent( lather: LatherMatch ):
 
     result = type_suffix_pattern.search(text)
     if result:
-        text = text[0:result.start()]
+        reduced = strip_separators(text[0:result.start()]).strip()
+        if reduced:
+            text = reduced
+            # repeat?
+            result = type_suffix_pattern.search(text)
+            if result:
+                reduced = strip_separators(text[0:result.start()]).strip()
+                if reduced:
+                    text = reduced
 
     result = possessive_pattern.match(text)
     if result: # TODO check that the apostrophe is not preceded by a space
@@ -283,7 +294,7 @@ def scanBody( tlc, silent = False ):
     """ Always returns a LatherMatch object.
     """
     lather = LatherMatch(body_html=tlc.body_html)
-    # L if lather; [MNO] for maker, [B][1XYS] for scent
+    # L if lather; [MNO] for maker, [B][1XYS] for scent, - for manual entry
 
     if not tlc.author and tlc.body == '[deleted]':
         return lather
@@ -293,6 +304,8 @@ def scanBody( tlc, silent = False ):
     lmr = lather_pattern.search(tlc.body)
     if not lmr:
         lmr = lather_alt_pattern.search(tlc.body)
+        if not lmr:
+            lmr = re.search('lathe\\**r:\\s*(.*)', tlc.body, re.IGNORECASE)
     if lmr:
         lather.lather = lmr.group(1).strip()
         lather.context = 'L'
@@ -329,9 +342,10 @@ def scanBody( tlc, silent = False ):
 
         if lather.scent:
             cleanAndMatchScent(lather)
-        elif lather.maker and scents.getSingleScent(lather.maker):
+        elif lather.maker and scents.isSingleScent(lather.maker):
             lather.context += '1'
             lather.confidence += 2
+            lather.scent = scents.getSingleScent(lather.maker)
         elif lather.maker:
             result = scents.match_scent(lather.maker, lather.scent)
             if result:

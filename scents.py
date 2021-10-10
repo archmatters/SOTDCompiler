@@ -316,6 +316,7 @@ _scent_pats = {
             'club bac+ar+a': 'Club Baccara',
             'vacan[zc]a romana?': 'Vacanza Romana',
             'low[\\- ]*scent skeletor': 'Low-Scent Skeletor',
+            'tibetan temple': 'Tibetan Temple',
         },
         lowpatterns={
             'spartacus': 'Spartacus',
@@ -332,6 +333,7 @@ _scent_pats = {
             'bac+ar+a': 'Club Baccara',
             'bl[av]ck': 'Black', # with an upside-down capital A, hence the interpretation of V
             'cafe au lait': 'Cafe au Lait',
+            'the city(?: \\(?never sleeps\\)?|)': 'The City (Never Sleeps)',
         },
         bases=[ 'kaizen', 'k2', 'vegan' ],
         custom=custom_ariana_evans
@@ -416,6 +418,7 @@ _scent_pats = {
             'first snow': 'First Snow',
             '(?:cologne|colonge|colnge) russe': 'Cologne Russe',
             '(?:the |the full |)measure of (?:a |)man+': 'The Full Measure of Man',
+            'fi+garose': 'Figarose',
             # club release
             'passiflora': 'Passiflora',
             # latha
@@ -674,7 +677,7 @@ _scent_pats = {
     'The Clovelly Soap Co.': Sniffer(
         lowpatterns={
             'sandalwood,? *may chang,? *' + _any_and + 'bay': 'Sandalwood, May Chang & Bay',
-            'sandalwood' + _any_and + 'may chang': 'Sandalwood, May Chang & Bay', # assuming same
+            'sandalwood' + _any_and + 'may chang': 'Sandalwood & May Chang',
             'tea tree' + _any_and + 'clay': 'Tea Tree & Clay'
         }
     ),
@@ -953,6 +956,22 @@ _scent_pats = {
         }
     ),
 
+    'Free Soap Collective': Sniffer(
+        lowpatterns={
+            'adele(?:' + _apostrophe + 's|) fat': 'Adele Fat',
+            _fougere + ' des alpe?s': 'Fougère des Alpes',
+            'psych[ea]+delic modern': 'Psychedelic Modern',
+            'Monterey Bay': 'Monterey Bay',
+        }
+    ),
+
+    'Furbo': Sniffer(
+        lowpatterns={
+            'blue?': 'Blu',
+        },
+        default_scent='Furbo'
+    ),
+
     'Gentleman\'s Nod': Sniffer(
         patterns={
             'kanpai': 'Kanpai'
@@ -1218,6 +1237,13 @@ _scent_pats = {
             '(?:the |)woodsy man': 'The Woodsy Man',
         }
     ),
+    
+    'Liojuny Shaving': Sniffer(
+        lowpatterns={
+            'Tampa': 'Tampa',
+            'Unknown': 'Unknown',
+        }
+    ),
 
     'Lisa\'s Natural Herbal Creations': Sniffer(
         lowpatterns={
@@ -1472,6 +1498,10 @@ _scent_pats = {
         }
     ),
 
+    'Palmira': Sniffer(
+        default_scent='Albus 1871'
+    ),
+
     'Palmolive': Sniffer(
         patterns={
             'Rinfrescante': 'Rinfrescante', # mentholated
@@ -1512,6 +1542,13 @@ _scent_pats = {
     'Paragon Shaving': Sniffer(
         patterns={
             'sunlit forest': 'Sunlit Forest',
+        }
+    ),
+
+    'Penhaligon\'s': Sniffer(
+        patterns={
+            'blenheim': 'Blenheim Bouquet',
+            'endymion': 'Endymion',
         }
     ),
 
@@ -1586,6 +1623,7 @@ _scent_pats = {
     'Pré de Provence': Sniffer(
         patterns={
             '(?:number|no\.?|num\.?|#|)\\s*63': 'No. 63',
+            'PdP63': 'No. 63',
         },
         lowpatterns={
             'bergamot' + _any_and + 'thyme': 'Bergamot and Thyme',
@@ -1646,6 +1684,7 @@ _scent_pats = {
             'p\\.?\\s*160': 'P.160',
             'xxx': 'XXX',
             'green (?:label|puck)': 'What the Puck?! Green Label',
+            'dead sea': 'The Dead Sea',
         }
     ),
 
@@ -1670,6 +1709,7 @@ _scent_pats = {
             '(?:1920 |)barbershop': 'Barbershop 1920',
             'sand(?:al|le)woods?' + _any_and + 'bourbon': 'Sandalwood & Bourbon',
             'bourbon(?:' + _any_and + '|\\s+)sand(?:al|le)wood': 'Sandalwood & Bourbon',
+            'kitchen sink': 'Kitchen Sink',
         },
     ),
 
@@ -1988,6 +2028,9 @@ _scent_pats = {
         lowpatterns={
             'rf': 'Royal Forest',
             'lemon' + _any_and + 'lime': 'Lemon & Lime',
+            'lime zest': 'Lime Zest',
+            'grapefruit': 'Grapefruit',
+            'cedarwood': 'Cedarwood',
         }
     ),
 
@@ -2010,6 +2053,7 @@ _scent_pats = {
         lowpatterns={
             'white buffalo': 'White Buffalo',
             'shark *b(?:ite|ait)': 'Shark Bite',
+            'bana[no\\-]*rama': 'Bana-o-rama'
         }
     ),
 
@@ -2123,6 +2167,12 @@ _scent_pats = {
             'ol' + _apostrophe + 'kentucky': 'Ol\' Kentucky',
         },
         bases=[ 'Formula T', 'Rustic' ]
+    ),
+
+    'Whispers from the Woods': Sniffer(
+        lowpatterns={
+            'hippie' + _apostrophe + 's? blend': 'Hippie Blend',
+        }
     ),
 
     'Wholly Kaw': Sniffer(
@@ -2353,10 +2403,22 @@ def _internal_find( text: str, maker: str, patterndict: dict, best: dict ):
                 }
     return best
 
+def isSingleScent( maker ):
+    """
+    Indicates if only one single scent is known for this maker.
+    """
+    _compile_all()
+    if not maker or maker not in _compiled_pats:
+        return False
+    so = _compiled_pats[maker]
+    if isinstance(so, Sniffer):
+        return so.is_single_scent()
+    return len(so) == 1
 
 def getSingleScent( maker ):
-    """ If only one single scent is known for this maker, its name is returned.
-        Otherwise None is returned.
+    """
+    If only one single scent is known for this maker, its name is returned.
+    Otherwise None is returned.
     """
     _compile_all()
     if maker not in _compiled_pats:
