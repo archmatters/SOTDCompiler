@@ -31,7 +31,7 @@ aparser.add_argument('--live', action='store_true',
         help='Look for posts on Reddit, not in file cache (compilation only).')
 aparser.add_argument('--date', 
         help='Specify a post date ("one" mode only).')
-aparser.add_argument('--days', default=5,
+aparser.add_argument('--days', type=int, default=5,
         help='Specify how many days to go back (incremental mode only).')
 args = aparser.parse_args()
 

@@ -277,9 +277,11 @@ _scent_pats = {
             '(?:american|ameriacan) pi': 'American Pi',
             'alchemical romance': 'Alchemical Romance',
             'love' + _any_and + 'other drugs': 'Love and Other Drugs',
+            'gr[ēe]n river': 'Grēn River',
         },
         lowpatterns={
             'nightcrawler': 'Nostalgic Nightcrawler',
+            'gr[ēe]+n river': 'Grēn River',
         }
     ),
 
@@ -443,6 +445,12 @@ _scent_pats = {
                 'excelsior', 'glissant', 'reserve', 'pp8' ]
     ),
 
+    'Bartigan & Stark': Sniffer(
+        lowpatterns={
+            'ch?ampione': 'Campione',
+        }
+    ),
+
     'BAUME.BE': Sniffer(
         lowpatterns={
             '(?:shaving |)soap': 'BAUME.BE',
@@ -468,11 +476,13 @@ _scent_pats = {
             '(?:7|seven) doubloons': '7 Doubloons',
         },
         lowpatterns={
+            'calypso' + _apostrophe + 's?': 'Calypso\'s Curse',
             'captain' + _apostrophe + 's choice': 'Captain\'s Choice',
             'captain' + _apostrophe + 's reserve': 'Captain\'s Reserve',
             'l[ae] concorde?': 'La Concorde',
             'siren' + _apostrophe + 's? song': 'Siren\'s Song',
             'grace o' + _apostrophe + 'malle?y': 'Grace O\'Malley',
+            '(?:the |)black rose': 'The Black Rose',
         }
     ),
 
@@ -602,6 +612,8 @@ _scent_pats = {
             '(?:aloe vera|green)': 'Bio/Aloe Vera',
             'bio': 'Bio/Aloe Vera',
             'soap': 'Cella',
+            '1?kg (?:brick|block)': 'Cella',
+            'red': 'Cella',
         },
         default_scent='Cella',
     ),
@@ -1230,6 +1242,14 @@ _scent_pats = {
         }
     ),
 
+    'Kool': Sniffer(
+        lowpatterns={
+            'frosty': 'Frosty',
+            '(?:monsoon|moisture)': 'Monsoon',
+        },
+        default_scent='Frosty'
+    ),
+
     'Lather Jack': Sniffer(
         patterns={},
         lowpatterns={
@@ -1258,7 +1278,10 @@ _scent_pats = {
             'bespoke #1': 'Bespoke #1',
             'myrkvi[ðdo]r': 'Myrkviðr',
             'black *fern': 'Blackfern',
-        }
+        },
+        lowpatterns={
+            '(?:the |)black rose': 'Black Rose',
+        },
     ),
 
     'Lotus Eater': Sniffer(
@@ -1595,6 +1618,7 @@ _scent_pats = {
             'doppelg[äa]nger black(?: label|)': 'Doppelgänger Black',
             'doppelg[äa]nger orange(?: label|)': 'Doppelgänger Orange',
             'doppelg[äa]nger ox blood(?: label|)': 'Doppelgänger Ox Blood',
+            'lo[~\\-]haiku': 'Lo~Haiku',
         },
         lowpatterns={
             'cad': 'CaD',
@@ -1827,7 +1851,8 @@ _scent_pats = {
 
     'Southern Witchcrafts': Sniffer(
         patterns={
-            'grave\\s*fruit': 'Gravefruit',
+            'grave\\s*fruit(?: 2:ii)': 'Gravefruit II',
+            'grave\\s*fruit(?: 1:i|)': 'Gravefruit',
             'desa?ia?rology': 'Desairology',
             'anthropophagy': 'Anthropophagy',
             'valley of ashes': 'Valley of Ashes',
@@ -1947,6 +1972,18 @@ _scent_pats = {
         }
     ),
 
+    'Strike Gold Shave': Sniffer(
+        patterns={
+            'l[ae] b[ea]f[ae]na': 'La Befana',
+        },
+        lowpatterns={
+            'Kennedy': 'Kennedy',
+            'Old Hickory': 'Old Hickory',
+            'Rushmore': 'Rushmore',
+            'Grant': 'Grant',
+        }
+    ),
+
     'Suavecito': Sniffer(
         patterns={
             'whiske?y bar': 'Whiskey Bar',
@@ -1999,6 +2036,9 @@ _scent_pats = {
     ),
 
     'Tabac': Sniffer(
+        lowpatterns={
+            'tabac': 'Original',
+        },
         default_scent='Original'
     ),
 
@@ -2031,6 +2071,7 @@ _scent_pats = {
             'lime zest': 'Lime Zest',
             'grapefruit': 'Grapefruit',
             'cedarwood': 'Cedarwood',
+            'organic shav(?:ing|e) cream': 'Unscented',
         }
     ),
 
@@ -2040,9 +2081,12 @@ _scent_pats = {
             'shave' + _any_and + 'roses dracaris': 'Shave & Roses Dracaris',
             # lineo intenso
             '(?:Aroma Intenso |)arancia amaro': 'Arancia Amaro',
+            '75° witch hazel ' + _any_and + ' oak': '75° Witch Hazel & Oak',
         },
         lowpatterns={
             'diVino': 'diVino',
+            '75th anniversary': '75° Witch Hazel & Oak',
+            '75 witch hazel' + _any_and + 'oak': '75° Witch Hazel & Oak',
             # lineo intenso
             'bergamotto neroli': 'Bergamotto Neroli',
             'crazy sandalwood': 'Crazy Sandalwood',
@@ -2055,6 +2099,14 @@ _scent_pats = {
             'shark *b(?:ite|ait)': 'Shark Bite',
             'bana[no\\-]*rama': 'Bana-o-rama'
         }
+    ),
+
+    '3P': Sniffer(
+        lowpatterns={
+            'mandorla': 'Mandorla',
+            'almond': 'Mandorla',
+        },
+        default_scent='Mandorla'
     ),
 
     'La Toja': Sniffer(
@@ -2451,11 +2503,16 @@ def title_case( text: str ):
         else:
             nextword = str.isalpha(text[i])
         if nextword != inword:
+            # TODO: pos=0, i.e. first word, makes this word a candidate,
+            # but capword will be false because it is usually capitalized.
+            # So why is pos==0 checked in the first branch?  After removing `and capword` from the
+            # second branch, I had to add the `pos > 0` to get this to work... need to review when
+            # I feel like spending more time thinking this through.
             candidate = inword and (pos == 0 or (text[pos - 1].isspace()))
             capword = allcaps or not text[pos].isupper()
             if candidate and capword and (pos == 0 or not not_cap_pattern.match(text, pos, i)):
                 tctext += text[pos].upper() + text[pos + 1:i].lower()
-            elif candidate and capword and not_cap_pattern.match(text, pos, i):
+            elif candidate and not_cap_pattern.match(text, pos, i) and pos > 0:
                 tctext += text[pos:i].lower()
             else:
                 tctext += text[pos:i]
