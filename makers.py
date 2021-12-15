@@ -18,6 +18,8 @@ _maker_pats = {
 
     'ac?qua di parma': 'Acqua di Parma',
 
+    'adagio road': 'Adagio Road',
+
     'alien shave': 'Alien Shave',
 
     'alphy' + _any_and + 'becs': 'Alphy & Becs',
@@ -74,7 +76,7 @@ _maker_pats = {
 
     'bartigan' + _any_and + 'stark': 'Bartigan & Stark',
 
-    'baume?\\.be': 'BAUME.BE',
+    'b[al]ume? *\\. *be': 'BAUME.BE',
 
     'bear(?:skin|ksin|)' + _any_and + 'tunic': 'Bearskin & Tunic',
 
@@ -110,7 +112,11 @@ _maker_pats = {
 
     'capt(?:ain|) fawcett(?: limited|ltd\\.?|)': 'Captain Fawcett Limited',
 
+    'captain *grims' + _apostrophe + '(?: *shave *supply|shav(?:ing|e))': 'Captain Grims\'',
+
     'captain' + _apostrophe + 's choice': 'Captain\'s Choice',
+
+    'caswell[\\- ]massey': 'Caswell-Massey',
 
     'castle forbes': 'Castle Forbes',
 
@@ -189,6 +195,7 @@ _maker_pats = {
     'DG' + _any_and + '(?:Chat+il+on Lux|cl\\b)': 'Declaration Grooming',
     'dec(?:la|ele)ration grooming' + _any_and + 'maggard(?: *razors|' + _apostrophe + 's|)': 'Declaration Grooming',
     'maggard(?: *razors|' + _apostrophe + 's|)' + _any_and + 'dec(?:la|ele)ration(?: grooming|)': 'Declaration Grooming',
+    'declaration grooming *(?:' + _any_and + '|)\\(?l' + _any_and + 'l grooming\\)?': 'Declaration Grooming',
     'l' + _any_and + 'l(?:/dec(?:la|ele)ration|) grooming': 'Declaration Grooming',
     'l' + _any_and + 'l\\s*\\(dec(?:la|ele)ration\\)(?: grooming|)': 'Declaration Grooming',
     'house of mammoth' + _any_and + 'dec(?:la|ele)ration(?: grooming|)': 'Declaration Grooming',
@@ -265,7 +272,7 @@ _maker_pats = {
 
     'godrej': 'Godrej',
 
-    'golddachs': 'Golddachs',
+    'gold\\s*dachs': 'Golddachs',
 
     'golden beards': 'Golden Beards',
 
@@ -342,6 +349,8 @@ _maker_pats = {
 
     'kool': 'Kool',
 
+    'krampert' + _apostrophe + 's(?: *finest|)': 'Krampert\'s Finest',
+
     'le labo\\b(?: inc\\.?|)': 'Le Labo Inc.',
 
     'lakewood soap' + _opt_company: 'Lakewood Soap Company',
@@ -366,7 +375,7 @@ _maker_pats = {
 
     'l[øo]thur(?: grooming|)': 'Løthur Grooming',
 
-    'lotus eater': 'Lotus Eater',
+    'lotus eater(?:(?: soap)+ ' + _opt_company + '|soaps?)': 'Lotus Eater',
 
     'lucky tiger': 'Lucky Tiger',
 
@@ -495,11 +504,16 @@ _maker_pats = {
 
     'pinnacle(?: grooming|)': 'Pinnacle Grooming',
 
+    'portland general store': 'Portland General Store',
+
     'portus cale': 'Portus Cale',
 
     'power ?stick': 'Power Stick',
 
     'pr[éeè] de provence': 'Pré de Provence',
+    'no\\.? *63': 'Pré de Provence', # special case
+
+    'prep ["“](?:the |)original formula["”]': 'Prep',
 
     'pro(?:ro?as+o|saro)': 'Proraso',
     'p(?:ro|or)asa?o': 'Proraso',
@@ -514,6 +528,7 @@ _maker_pats = {
 
     'razor emporium': 'Razor Emporium',
 
+    'razorock king of the castle': 'RazoRock',
     'what the puck\\??!?\\??': 'RazoRock',
 
     'red house farms?,? *by *u/grindermonk': 'Red House Farm',
@@ -525,6 +540,8 @@ _maker_pats = {
     'reef *point(?: soapworks| soaps?|)': 'Reef Point Soaps',
 
     'River Valley Trading': 'River Valley Trading',
+
+    'rock *rose apothecary': 'Rock Rose Apothecary',
 
     '(?:st\\.?|saint) *james(?: of london|)': 'St. James of London',
 
@@ -564,6 +581,8 @@ _maker_pats = {
 
     'smg soaps': 'SMG Soaps',
 
+    'smoking monster': 'Smoking Monster',
+
     'soap commander': 'Soap Commander',
 
     'the soap exchange': 'The Soap Exchange',
@@ -571,6 +590,8 @@ _maker_pats = {
     'soap smooth': 'Soap Smooth',
 
     'soapy bathman': 'Soapy Bathman',
+
+    'soapy science': 'Soapy Science',
 
     'some irish guy' + _apostrophe + 's': 'Some Irish Guy\'s',
 
@@ -627,7 +648,7 @@ _maker_pats = {
     '@talbotshaving': 'Talbot Shaving',
     'talbot\\s*(?:shaving|)': 'Talbot Shaving',
 
-    'tabac\\b': 'Tabac',
+    '(?<!vanill[ea] de )tabac\\b': 'Tabac',
     'm[äa]u?rer' + _any_and + 'wirtz': 'Tabac',
 
     'taconic\\b(?: shave|)': 'Taconic Shave',
@@ -643,6 +664,8 @@ _maker_pats = {
     'a&e[ /]the club': 'Ariana & Evans',
 
     '345 soaps?' + _opt_company: '345 Soap Co.',
+
+    '3p italian soap': '3P',
 
     'thr?ough the fire fine craft': 'Through the Fire Fine Craft',
 
@@ -684,6 +707,11 @@ _maker_pats = {
     'viking(?: (?:shaving |)soap|)': 'Viking Soap & Cosmetic',
 
     'vito' + _apostrophe + 's': 'Vitos',
+
+    '(?:west coast shaving|wcs)' + _any_and + 'chicago groom\w+' + _opt_company + '(?:\((?:form(?:er|al)ly\\s+|)oleo\\b[^)]*\)|)': 'West Coast Shaving',
+    '(?:west coast shaving|wcs)' + _any_and + 'oleo\\b\\s*(?:soap\\s*works|soap)': 'West Coast Shaving',
+    '(?:west coast shaving|wcs)' + _any_and + 'catie' + _apostrophe + 's bubbles': 'West Coast Shaving',
+    '(?:west coast shaving|wcs)' + _any_and + 'zingari(?: man|)': 'West Coast Shaving',
 
     'west of olympia': 'West of Olympia',
 
@@ -736,11 +764,11 @@ _hw_maker_pats = {
     'k shave wor(?:x|ks)': 'K Shave Worx',
     'karve(?: shaving' + _opt_company + '|)': 'Karve Shaving Co.',
     '(?:gb |)kent': 'Kent',
-    'london razors': 'London Razors',
     'london razors' + _any_and + '(?:summer break(?: soaps?|)|sbs)' : 'London Razors',
     'summer break(?: soaps?|)' + _any_and + 'london razors' : 'London Razors',
+    'london razors': 'London Razors',
     'maggard' + _apostrophe + 's?\\s*(?:razors?|)': 'Maggard Razors',
-    'm[üu]hle': 'Mühle',
+    'm[üuû]hle': 'Mühle',
     'olivina(?: men|)': 'Olivina Men',
     'oz shaving' + _opt_company: 'Oz Shaving Co.',
     'paladin(?: shaving|)': 'Paladin Shaving',
@@ -761,9 +789,6 @@ _hw_maker_pats = {
     'summer? break\\s*(?:soap\\s*works|soaps?|)': 'Summer Break Soaps',
     '(?:the |)traditional shaving' + _opt_company: 'The Traditional Shaving Co.',
     'van der hag[ea]n': 'Van der Hagen',
-    '(?:west coast shaving|wcs)' + _any_and + 'chicago groom\w+' + _opt_company + '(?:\((?:form(?:er|al)ly\\s+|)oleo\\b[^)]*\)|)': 'West Coast Shaving',
-    '(?:west coast shaving|wcs)' + _any_and + 'oleo\\b\\s*(?:soap\\s*works|soap)': 'West Coast Shaving',
-    '(?:west coast shaving|wcs)' + _any_and + 'catie' + _apostrophe + 's bubbles': 'West Coast Shaving',
     'west coast shaving': 'West Coast Shaving',
     'wet shaving products': 'Wet Shaving Products',
     'wild west (?:shaving|shave)' + _opt_company: 'Wild West Shaving Co.',
@@ -798,9 +823,9 @@ _abbrev_pats = {
     'cb': 'Catie\'s Bubbles',
     'cbl': 'CBL Soaps',
     'c' + _any_and + 'e': 'Crabtree & Evelyn',
-    'cf': 'Chiseled Face',
     'cf' + _any_and + 'zoologist': 'Chiseled Face',
     'crsw': 'Cold River Soap Works',
+    'c' + _any_and + 's': 'Czech & Speake',
     'dg' + _any_and + 'cl': 'Declaration Grooming',
     'dg' + _any_and + 'hom': 'Declaration Grooming',
     'l' + _any_and + 'l': 'Declaration Grooming',
@@ -855,6 +880,7 @@ _abbrev_pats = {
     'zm': 'Zingari Man',
     # hardware vendors
     'aos': 'Art of Shaving',
+    'cfg?': 'Chiseled Face',
     'd&?g': 'Declaration Grooming',
     'ej': 'Edwin Jagger',
     'fine': 'Fine Accoutrements',
@@ -914,7 +940,8 @@ def matchMaker( text ):
     saved_full_hw = None
     for pattern in _compiled_hw:
         result = pattern.match(text)
-        if result:
+        if result and (not saved_full_hw or (result.end() - result.start() >
+                saved_full_hw['match'].end() - saved_full_hw['match'].start())):
             saved_full_hw = { 'match': result, 'name': _compiled_hw[pattern], 'abbreviated': False }
     for pattern in _compiled_other:
         result = pattern.match(text)
@@ -949,18 +976,20 @@ def searchMaker( text: str ):
     result = _subSearch(text, _compiled_pats)
     if result:
         rpos = result['match'].start()
-    if not result or multiline:
+    if not result:
         saved_full_hw = _subSearch(text, _compiled_hw)
         next_rs = _subSearch(text, _compiled_other)
         if next_rs and next_rs['match'].start() < rpos:
             result = next_rs
             rpos = result['match'].start()
-    if not result or multiline:
-        next_rs = _subSearch(text, _compiled_abbrev)
-        if next_rs and next_rs['match'].start() < rpos:
-            result = next_rs
-            rpos = result['match'].start()
-            result['abbreviated'] = True
+        if not result or multiline:
+            next_rs = _subSearch(text, _compiled_abbrev)
+            if next_rs and next_rs['match'].start() < rpos:
+                result = next_rs
+                rpos = result['match'].start()
+                result['abbreviated'] = True
+        if result and result['abbreviated'] and saved_full_hw and saved_full_hw['match'].start() < rpos:
+            return saved_full_hw
     if result:
         return result
     else:

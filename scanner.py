@@ -25,10 +25,10 @@ lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         |
             pre[\\- ]?shave/(?:soap|cream)/(?:balm|after[\\- ]?shave|splash)
         )[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('''\\s*\\(?(?:\\s*(?:soap|cream)
-        |\\s+shav(?:ing|e)\\s+(?:soap|cream)
-        |\\s+soap|\\s+cream|\\s+\\(soap\\)
-        |\\s+(?:soap\\s*|)sampler?)\\s*(?:\([^(]+\)|)\\)?\\s*$''', re.IGNORECASE | re.VERBOSE)
+type_suffix_pattern = re.compile('''\\s*\\(?(?:\\s*shav(?:ing|e)\\s+(?:soap|cream)
+        |\\s*(?:soap\\s*|)sampler?
+        |\\s*(?:soap|cream)
+        |\\s*\\(soap\\))\\s*(?:\\([^(]+\\)|)\\)?\\s*$''', re.IGNORECASE | re.VERBOSE)
 # applied to markdown, hence the backslash
 separator_pattern = re.compile('\\s*(?:\\\\?-+|–|:|,|\\.|\\|)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
@@ -37,6 +37,7 @@ sample_pattern = re.compile('\\s*(?:sample|\\(sample(?: size|)\\))\\s*$', re.IGN
 quoted_pattern = re.compile('\\s*(["\'])(.*)\\1\\s*')
 non_alpha_pattern = re.compile('\W*')
 unknown_scent_pattern = re.compile('shav(?:ing|e)(?:\\s*(?:soap|cream)|)\\s*$', re.IGNORECASE)
+md_link_pattern = re.compile('\\]\\s*\\(')
 
 sotd_pattern = re.compile('sotd', re.IGNORECASE)
 ymd_pattern = re.compile('(\\d{4})-(\\d\\d)-(\\d\\d)', re.IGNORECASE)
@@ -208,8 +209,9 @@ def strip_separators( text: str ):
 
 def cleanAndMatchScent( lather: LatherMatch ):
     text = lather.scent
-    lpos = text.find('](')
-    if lpos > 0:
+    result = md_link_pattern.search(text)
+    if result and result.start() > 0:
+        lpos = result.start()
         bpos = text.find('[', 0, lpos)
         if bpos > 0:
             result = non_alpha_pattern.match(text[0:bpos])
@@ -305,11 +307,13 @@ def scanBody( tlc, silent = False ):
     if not lmr:
         lmr = lather_alt_pattern.search(tlc.body)
         if not lmr:
-            lmr = re.search('lathe\\**r:\\s*(.*)', tlc.body, re.IGNORECASE)
+            lmr = re.search('lathe\\**r\\**\\s*[:\\-]?\\s*(.*)', tlc.body, re.IGNORECASE)
+            if lmr: 
+                lather.confidence -= 2
     if lmr:
         lather.lather = lmr.group(1).strip()
         lather.context = 'L'
-        lather.confidence = 3
+        lather.confidence += 3
         # TODO match "N/A", "none", "nothing" ??
         result = makers.matchMaker(lather.lather)
         if result:
