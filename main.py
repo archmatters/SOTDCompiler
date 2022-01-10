@@ -199,7 +199,10 @@ def comp_from_file():
             post_proc_count += 1
         for cmt in comments:
             comment_count += 1
-            scanner.scanComment(cmt, post_date, dataFile, arg_delimiter)
+            try:
+                scanner.scanComment(cmt, post_date, dataFile, arg_delimiter)
+            except Exception as e:
+                raise Exception(f"Error processing '{cmt.id}'", e)
     print(f"Processed {comment_count} comments in {post_proc_count} files.")
 
 

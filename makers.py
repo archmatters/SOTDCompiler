@@ -10,11 +10,11 @@ _maker_pats = {
     # known soapmakers
     'a\\.?\\s*j\\.? murray' + _apostrophe + 's(?: shaving(?: soap|)|)': 'A. J. Murray\'s',
 
-    'abbate y la mantia': 'Abbate y la Mantia',
+    'ab+at+e y la mantia': 'Abbate y la Mantia',
 
     'acca kappa': 'Acca Kappa',
 
-    'ach brito': 'Ach Brito',
+    'ach(?:illes|\\.|) (?: de|) brito': 'Ach. Brito',
 
     'ac?qua di parma': 'Acqua di Parma',
 
@@ -25,6 +25,8 @@ _maker_pats = {
     'alphy' + _any_and + 'becs': 'Alphy & Becs',
 
     '[aÁ]lvarez g[óoôò]mez': 'Alvarez Gómez',
+
+    'angora soaps?': 'Angora Soaps',
 
     'antica barberia': 'Antica Barberia',
 
@@ -146,6 +148,9 @@ _maker_pats = {
 
     'classic edge': 'Classic Edge',
 
+    # Classic Shaving also makes "Classic Brand" cream
+    'classic *shaving(?:\\.com|)': 'Classic Shaving',
+
     '(?:the |)clovelly(?: soap' + _opt_company + '|)': 'The Clovelly Soap Co.',
 
     'clubman pinaud': 'Clubman Pinaud',
@@ -201,6 +206,8 @@ _maker_pats = {
     'house of mammoth' + _any_and + 'dec(?:la|ele)ration(?: grooming|)': 'Declaration Grooming',
     'dec(?:la|ele)ration(?: grooming|)' + _any_and + '(?:house of mammoth|hom)': 'Declaration Grooming',
 
+    'dick joh?ns+on(?: shav(?:ing|e) soap|)': 'Dick Johnson',
+
     'dindi naturals': 'Dindi Naturals',
 
     '(?:dr.?|doctor) bron+[eo]r' + _apostrophe + 's': 'Dr. Bronner\'s',
@@ -213,9 +220,13 @@ _maker_pats = {
 
     'dr\\.? selby': 'Dr. Selby',
 
+    'e' + _any_and + 's *ras+age(?: tradition+[ea]l|)': 'E&S',
+
     'eleven(?: shaving|)': 'Eleven Shaving',
 
     'elvado': 'Elvado',
+
+    'epsilon(?: for men|men|)': 'Epsilon',
 
     'esbjerg': 'Esbjerg',
 
@@ -290,6 +301,8 @@ _maker_pats = {
 
     'hecho sma': 'Hecho SMA',
 
+    'heinrich b(?:ö|o|oe)ker baumw[eo]rk rasierseife': 'Böker',
+
     '@henrietvictoria': 'Henri et Victoria',
     'henri et victoria': 'Henri et Victoria',
 
@@ -309,7 +322,7 @@ _maker_pats = {
     'mammoth\\s*(?:soaps?|)' + _any_and + 'ap(?:\\s*reserve|r\\b)': 'House of Mammoth',
     'house of mammoth' + _any_and + 'wholly kaw': 'Wholly Kaw',
     '@?mammoth\\s*(?:soaps?|)': 'House of Mammoth',
-    'house of mammoth': 'House of Mammoth',
+    'house of (?:mammoth|\U0001f9a3)': 'House of Mammoth',
 
     'hub city soapworks': 'Hub City Soap Company',
     'hub city\\s*(?:soap' + _opt_company + '|)': 'Hub City Soap Company',
@@ -329,9 +342,11 @@ _maker_pats = {
 
     'los jabones de joserra': 'Los Jabones de Joserra',
 
-    'k shave worx': 'K Shave Worx',
+    'k *shave wor(?:x|ks?)': 'K Shave Worx',
 
     'kakashi soap': 'Kakashi Soap',
+
+    '(?:kanatitsa|канатица(?: *сапуна|))': 'Kanatitsa',
 
     '(?:karo|kapo|каро)\\b': 'Каро (Karo)',
 
@@ -373,7 +388,7 @@ _maker_pats = {
     
     '(?:the |)(?:los angeles|l *a) shaving(?: soap|)' + _opt_company: 'Los Angeles Shaving Soap Co.',
 
-    'l[øo]thur(?: grooming|)': 'Løthur Grooming',
+    f'l[øo]thur(?: grooming{_opt_company}|)': 'Løthur Grooming',
 
     'lotus eater(?:(?: soap)+ ' + _opt_company + '|soaps?)': 'Lotus Eater',
 
@@ -381,8 +396,10 @@ _maker_pats = {
 
     'm' + _any_and + 'e shaving(?: soaps|)': 'M&E Shaving Soaps',
 
-    'macduff' + _apostrophe + 's? soap' + _opt_company: 'MacDuff\'s Soap Company',
-    'macduff' + _apostrophe + 's': 'MacDuff\'s Soap Company',
+    # split into two patterns so 'macduff' will match here but 'mcduff' won't,
+    # but see apprev_pats below
+    f"ma?cduff{_apostrophe}s *soap *{_opt_company}": "MacDuff's Soap Company",
+    f"macduff{_apostrophe}s?": "MacDuff's Soap Company",
 
     'maggard razors \\((?:through the fire fine craft|ttffc)\\)': 'Maggard Razors',
 
@@ -471,6 +488,8 @@ _maker_pats = {
 
     '(?:bloc *|)osma': 'Osma',
 
+    'oway': 'Oway',
+
     'p\\.?160': 'P.160',
 
     'palmira': 'Palmira',
@@ -494,7 +513,7 @@ _maker_pats = {
     'l' + _apostrophe + 'asinerie de la vioune' + _any_and + 'le p[èeé]re lucien': 'Le Père Lucien',
     'l[ea] p[èeé]re luciene?': 'Le Père Lucien',
 
-    'pereiras?\\b(?:shavery|)': 'Pereira Shavery',
+    'pereiras?(?: *shavery|)': 'Pereira Shavery',
 
     'penhaligon(?:' + _apostrophe + 's|)': 'Penhaligon\'s',
 
@@ -511,7 +530,6 @@ _maker_pats = {
     'power ?stick': 'Power Stick',
 
     'pr[éeè] de provence': 'Pré de Provence',
-    'no\\.? *63': 'Pré de Provence', # special case
 
     'prep ["“](?:the |)original formula["”]': 'Prep',
 
@@ -526,13 +544,15 @@ _maker_pats = {
 
     'queen charlotte soaps': 'Queen Charlotte Soaps',
 
+    'ralon': 'Ralon',
+
     'razor emporium': 'Razor Emporium',
 
     'razorock king of the castle': 'RazoRock',
     'what the puck\\??!?\\??': 'RazoRock',
 
-    'red house farms?,? *by *u/grindermonk': 'Red House Farm',
-    'red house farms? *\\( *\\[u/grindermonk\\]\\([^\\)]+\\)+' + _apostrophe + 's?\\)?': 'Red House Farm',
+    'red *house *farms?,? *by *u/grindermonk': 'Red House Farm',
+    'red *house *farms? *\\( *\\[u/grindermonk\\]\\([^\\)]+\\)+' + _apostrophe + 's?\\)?': 'Red House Farm',
     'red\\s*house farms?(?: \\( *u?/?grindermonk\\)?' + _apostrophe + 's?\\)|)': 'Red House Farm',
     '(?:u/|)grinder\\s*monk' + _apostrophe + '(?:s |)(?: homemade| red house farms?|)': 'Red House Farm',
     'red (?:farm|barn)': 'Red House Farm',
@@ -550,8 +570,8 @@ _maker_pats = {
     'saponificio +bignoli(?: +c\\.? +galliate| +carlo|)': 'Saponificio Bignoli',
     's\\.? *c\\.? *bignoli': 'Saponificio Bignoli',
 
-    'saponificio\\s*v[ae]?r[ei]sino': 'Saponificio Varesino',
-    'saponifici?o\\s*varen?s[ie]n?i?o': 'Saponificio Varesino',
+    'sapon[io]fici?o *v[ae]?r[ei]sino': 'Saponificio Varesino',
+    'sapon[io]fici?o *varen?s[ie]n?i?o': 'Saponificio Varesino',
 
     '(?:the |)savage homestead': 'The Savage Homestead',
 
@@ -574,6 +594,8 @@ _maker_pats = {
     #'𝕊ℍ𝔸𝕍𝔼⭐𝔻𝔸ℕ𝔻𝕐'
 
     'shaver heaven': 'Shaver Heaven',
+
+    'shavologist': 'Shavologist',
 
     'Signature Soaps': 'Signature Soaps',
 
@@ -699,9 +721,11 @@ _maker_pats = {
 
     'de ver?gulde? hande?': 'De Vergulde Hand',
 
-    'Via Barberia': 'Via Barberia',
+    '(?:omega *|)via *barberia': 'Via Barberia',
 
     'Vicco': 'Vicco',
+
+    f'victory shav(?:ing|e){_opt_company}': 'Victory Shaving Co.',
 
     'viking soap' + _any_and + 'cosmetic': 'Viking Soap & Cosmetic',
     'viking(?: (?:shaving |)soap|)': 'Viking Soap & Cosmetic',
@@ -739,7 +763,7 @@ _maker_pats = {
 
     'zingar[io] *(?:man|)' + _any_and + 'barrister' + _any_and + 'mann': 'Zingari Man',
     'zingar[io] *(?:man|)' + _any_and + 'b' + _any_and + 'm': 'Zingari Man',
-    'zingari *(?:man|)' + _any_and + 'wcs': 'Zingari Man',
+    'zina?gari *(?:man|)' + _any_and + 'wcs': 'Zingari Man',
     'zingar[io] *(?:mann?|)': 'Zingari Man',
     'z\\*{4,} *(?:mann?|)': 'Zingari Man',
 }
@@ -747,12 +771,14 @@ _maker_pats = {
 # these also make hardware
 _hw_maker_pats = {
     '(?:the |)art of shaving': 'Art of Shaving',
+    '(?:heinrich|h\\.|h) b(?:ö|o|oe)ker baumw[eo]rk': 'Böker',
     'bundu-? *beard': 'Bundubeard',
     '@chiseled_face': 'Chiseled Face',
     'chise?led face(?: groomatorium|)': 'Chiseled Face',
     '@declarationgrooming': 'Declaration Grooming',
     'declaration\\s*(?:grooming?|)': 'Declaration Grooming',
     'dec\\.? grooming': 'Declaration Grooming',
+    'derby(?: goo|)': 'Derby',
     'dollar *shave *club': 'Dollar Shave Club',
     'edwin jagg[ea]r *(?:shav(?:ing|e) soap|)': 'Edwin Jagger',
     'fendrihan': 'Fendrihan',
@@ -804,6 +830,9 @@ _other_pats = {
 
     # things that aren't really "lather," but for some reason got used anyway
     'k[ae]rosene\\.*': 'kerosene',
+
+    # not a soapmaker, but sometimes confused with one
+    'chatil+i?on luxe?': 'Chatillon Lux',
 }
 
 _abbrev_pats = {
@@ -822,6 +851,7 @@ _abbrev_pats = {
     'bea': 'BEA', # not an abbreviation, just a very short word
     'cb': 'Catie\'s Bubbles',
     'cbl': 'CBL Soaps',
+    'cgco': 'Chicago Grooming Co.',
     'c' + _any_and + 'e': 'Crabtree & Evelyn',
     'cf' + _any_and + 'zoologist': 'Chiseled Face',
     'crsw': 'Cold River Soap Works',
@@ -846,6 +876,7 @@ _abbrev_pats = {
     'lnhc': 'Lisa\'s Natural Herbal Creations',
     'lassco?': 'Los Angeles Shaving Soap Co.',
     'ly[kc]o': 'Lyko', # not actually abbreviated, just a very short word
+    f"mcduff{_apostrophe}s?": "MacDuff's Soap Company", # short mispelling
     'mdc': 'Martin de Candre',
     'msc': 'Master Soap Creations',
     'mlsw?': 'Mickey Lee Soapworks',
@@ -876,7 +907,7 @@ _abbrev_pats = {
     'taylor' + _apostrophe + 's': 'Taylor of Old Bond Street',
     'wk': 'Wholly Kaw',
     'wms': 'William\'s Mug Soap',
-    'z *man': 'Zingari Man',
+    'z[ \\-]*man': 'Zingari Man',
     'zm': 'Zingari Man',
     # hardware vendors
     'aos': 'Art of Shaving',

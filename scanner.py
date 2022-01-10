@@ -2,16 +2,14 @@
 
 import makers
 import scents
+from common import strip_separators, separator_pattern
 
 import datetime
-import json
-import praw
 import re
 
-from pathlib import Path
 
 lather_pattern = re.compile('''(?:^|[\n])[^a-z0-9]*
-        (?:soap/lather|lath?er|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soap|cream|softw[ae]re)\\b
+        (?:soap/lather|lath?er|shav(?:ing|e)\\s+(?:soap|cream)|soap/cream|soa+p|cream|softw[ae]re)\\b
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:splash|balm|(?:after|post)\\s*shave)|post|)
         (?:\\s*(?:/|&(?:amp;|)|and|\\+)\\s*(?:WH|ed[pt]|fragrance)|)
         (?!\\s*games)[\\W_]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
@@ -25,15 +23,10 @@ lather_alt_pattern = re.compile('''(?:^|[\n])[^a-z]*
         |
             pre[\\- ]?shave/(?:soap|cream)/(?:balm|after[\\- ]?shave|splash)
         )[^a-z0-9]*(\\S.*)''', re.IGNORECASE | re.VERBOSE)
-type_suffix_pattern = re.compile('''\\s*\\(?(?:\\s*shav(?:ing|e)\\s+(?:soap|cream)
-        |\\s*(?:soap\\s*|)sampler?
-        |\\s*(?:soap|cream)
-        |\\s*\\(soap\\))\\s*(?:\\([^(]+\\)|)\\)?\\s*$''', re.IGNORECASE | re.VERBOSE)
 # applied to markdown, hence the backslash
-separator_pattern = re.compile('\\s*(?:\\\\?-+|–|:|,|\\.|\\|)\\s*')
 possessive_pattern = re.compile('(?:\'|&#39;|’|)s\\s+', re.IGNORECASE)
 by_pattern = re.compile('(.*?)\\s+(?:by|from)\\s*$', re.IGNORECASE)
-sample_pattern = re.compile('\\s*(?:sample|\\(sample(?: size|)\\))\\s*$', re.IGNORECASE)
+sample_pattern = re.compile('\\s*[\\(\\[]?sample(?: size|)[\\)\\]]?\\s*$', re.IGNORECASE)
 quoted_pattern = re.compile('\\s*(["\'])(.*)\\1\\s*')
 non_alpha_pattern = re.compile('\W*')
 unknown_scent_pattern = re.compile('shav(?:ing|e)(?:\\s*(?:soap|cream)|)\\s*$', re.IGNORECASE)
@@ -193,20 +186,6 @@ def scentFirst( body: str, lather: str ):
     return result
 
 
-def strip_separators( text: str ):
-    lpos = 0
-    while lpos < len(text):
-        result = separator_pattern.search(text, lpos)
-        if result:
-            if result.start() == 0:
-                text = text[result.end():]
-            elif result.end() == len(text):
-                text = text[0:result.start()]
-            lpos = result.end()
-        else:
-            lpos = len(text)
-    return text
-
 def cleanAndMatchScent( lather: LatherMatch ):
     text = lather.scent
     result = md_link_pattern.search(text)
@@ -234,18 +213,6 @@ def cleanAndMatchScent( lather: LatherMatch ):
     result = sample_pattern.search(text)
     if result:
         text = text[0:result.start()]
-
-    result = type_suffix_pattern.search(text)
-    if result:
-        reduced = strip_separators(text[0:result.start()]).strip()
-        if reduced:
-            text = reduced
-            # repeat?
-            result = type_suffix_pattern.search(text)
-            if result:
-                reduced = strip_separators(text[0:result.start()]).strip()
-                if reduced:
-                    text = reduced
 
     result = possessive_pattern.match(text)
     if result: # TODO check that the apostrophe is not preceded by a space
@@ -277,6 +244,8 @@ def cleanAndMatchScent( lather: LatherMatch ):
         lather.confidence += 4
         return True
     elif result:
+        # TODO need to consolidate unknown_scent_pattern
+        # with type_suffix_pattern in scents.py
         if unknown_scent_pattern.match(result['scent']):
             lather.scent = 'Unknown'
         else:
