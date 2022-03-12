@@ -4,9 +4,9 @@ import re
 
 from common import strip_separators, separator_pattern
 
-type_suffix_pattern = re.compile('''\\s*\\(?(?:\\s*shav(?:ing|e)\\s+(?:soap|cream)
+type_suffix_pattern = re.compile('''\\s*\\(?(?:\\s*shav(?:ing|e)\\s+(?:soap|cream|puck)
         |\\s*(?:soap\\s*|)sampler?
-        |\\s*(?:soap|cream)
+        |\\s*(?:soap|cream)(?:\\s*(?:\\/|&|\\+|,|\\s)\\s*(?:splash|post)|)
         |\\s*\\(soap\\))\\s*(?:\\([^(]+\\)|)\\)?\\s*$''', re.IGNORECASE | re.VERBOSE)
 
 _simple_cream_soap_pat = re.compile('^(?:shav(?:ing|e) |)(?:soap|cream)$')
@@ -14,18 +14,28 @@ _any_pattern = re.compile('.*')
 
 _apostrophe = '(?:\'|&#39;|’|)'
 _any_and = '\\s*(?:&(?:amp;|)|and|\+|)\\s*'
-_prefix = '\\b'
-_suffix = '\\b[\\.,]?'
 
 _fougere = 'four?g[èeé]re'
 _sandalwood = 'sand(?:al|le) *wood'
 _no_dot = '(?:number|n^?o\\.?|#)'
+_barbershop = 'bar?ber(?: *shop|)'
 
 _unique_names = { }
 _compiled_pats = None
 
 def _default_custom( map ):
     return map
+
+letterlead = re.compile('\w')
+
+def comp_pattern( base_pattern ):
+    _prefix = '\\b'
+    _suffix = '\\b[\\.,]?'
+    if not letterlead.match(base_pattern):
+        _prefix = ''
+    if base_pattern[-1] == '$':
+        _suffix = ''
+    return re.compile(_prefix + base_pattern + _suffix, re.IGNORECASE)
 
 class Sniffer:
     """ A class to handle scent matching.
@@ -61,18 +71,13 @@ class Sniffer:
         allnames = [ ]
         if lowpatterns:
             for pat in lowpatterns:
-                self.lowpatterns[re.compile(_prefix + pat + _suffix,
-                        re.IGNORECASE)] = lowpatterns[pat]
+                self.lowpatterns[comp_pattern(pat)] = lowpatterns[pat]
                 if lowpatterns[pat] not in allnames:
                     allnames.append(lowpatterns[pat])
         if highpatterns:
             for pat in highpatterns:
                 finalpat = pat
-                if pat[0] != '^':
-                    finalpat = _prefix + finalpat
-                if pat[-1] != '$':
-                    finalpat = finalpat + _suffix
-                self.highpatterns[re.compile(finalpat, re.IGNORECASE)] = highpatterns[pat]
+                self.highpatterns[comp_pattern(finalpat)] = highpatterns[pat]
                 if highpatterns[pat] not in allnames:
                     allnames.append(highpatterns[pat])
         self.namecount = len(allnames)
@@ -256,6 +261,13 @@ def custom_extro( map ):
             map['maker'] = 'NassRasur Club'
     return map
 
+def custom_maeurer_wirtz( map ):
+    if map:
+        if "irisch" in map['scent'].lower() or "irish mo" in map['scent'].lower():
+            map['maker'] = 'Sir Irisch Moos'
+            map['scent'] = 'Sir Irisch Moos'
+    return map
+
 
 _default_sniffer = Sniffer()
 
@@ -268,7 +280,7 @@ _scent_pats = {
             'garibaldi': 'Garibaldi',
             'monet': 'Monet',
             'buttero': 'Buttero',
-            'don jos[èe]': 'Don Josè',
+            'don jos[èeé]': 'Don Josè',
             'v[uo]lcano': 'Vulcano',
         }
     ),
@@ -309,7 +321,7 @@ _scent_pats = {
     'Angora Soaps': Sniffer(
         lowpatterns={
             'high *roller': 'High Roller',
-            'barber *shop': 'Barbershop',
+            f'{_barbershop}': 'Barbershop',
         }
     ),
 
@@ -399,6 +411,21 @@ _scent_pats = {
         }
     ),
 
+    'Asylum Shave Works': Sniffer(
+        patterns={
+            'levante': 'Levante',
+            'flying mango': 'Flying Mango',
+        },
+        lowpatterns={
+            'aloe': 'Aloe',
+            'bay rum': 'Bay Rum',
+            'bergamot': 'Bergamot',
+            'charcoal': 'Charcoal',
+            '(?:european *|)barbershop': 'European Barbershop',
+        },
+        bases=[ 'english collection' ]
+    ),
+
     'Australian Private Reserve': Sniffer(
         patterns={
             'raconteur': 'Raconteur',
@@ -457,8 +484,8 @@ _scent_pats = {
             'pag[ai]?nini' + _apostrophe + 's violin': 'Paganini\'s Violin',
             'levia?n?than': 'Leviathan',
             'beaudelaire': 'Beaudelaire',
-            'foug[èeé]re gothi\w+': 'Fougère Gothique',
-            'foug[èeé]re angel\w+': 'Fougère Angelique',
+            f'{_fougere} gothi\w+': 'Fougère Gothique',
+            f'{_fougere} angel\w+': 'Fougère Angelique',
             'behold the whatsis!?': 'Behold the Whatsis!',
             'le grand (?:cyphre|chyph?re)': 'Le Grand Chypre',
             '(?:motherfuckin(?:\'|g)|mf) roam': 'Roam',
@@ -473,6 +500,10 @@ _scent_pats = {
             f'figgy puddin(?:{_apostrophe}|g)': "Figgy Puddin'",
             'ja[cs]inthe?': 'Jacinthe',
             'amaz(?:el|le)nut': 'Amazelnut',
+            'citr[iu]c[ua]y[áaà]': 'Citricuyá',
+            'figaros[ea]': 'Figarose',
+            'vespers?': 'Vespers',
+            f'vetiver,? *heather,?{_any_and}clary sage': 'Vetiver, Heather, & Clary Sage',
             # was initially a club release
             'passiflora': 'Passiflora',
             # latha
@@ -604,7 +635,7 @@ _scent_pats = {
 
     'The Butterfly Garden': Sniffer(
         lowpatterns={
-            'barber\\s*shop': 'Barber Shop',
+            _barbershop: 'Barber Shop',
         }
     ),
 
@@ -648,6 +679,7 @@ _scent_pats = {
             'vintage (?:for |)(?:serf|s\\.e\\.r\\.f\\.)': 'Vintage S.E.R.F.',
             'dirty prose': 'Dirty Prose',
             '322': '322',
+            f'{_apostrophe}95 liquid labels': '\'95 Liquid Labels'
         },
         lowpatterns={
             'cool' + _any_and + 'fresh': 'Cool and Fresh',
@@ -679,13 +711,14 @@ _scent_pats = {
     'Cella': Sniffer(
         lowpatterns={
             '(?:cella |)crema sapone': 'Cella',
-            '(?:cella |milano |)crema d[ae] barba': 'Cella',
+            '(?:cella |milano |)cre(?:ma|am) d[ae] barba': 'Cella',
             '(?:aloe vera|green)': 'Bio/Aloe Vera',
             'bio': 'Bio/Aloe Vera',
             'soap': 'Cella',
             '1?kg (?:brick|block)': 'Cella',
             'red': 'Cella',
             'crema rapida': 'Cella',
+            'milano': 'Cella',
         },
         default_scent='Cella',
     ),
@@ -697,7 +730,7 @@ _scent_pats = {
             'hill countr?y dew': 'Hill Country Dew',
         },
         lowpatterns={
-            'bar?bershop': 'Grandpa\'s Barbershop',
+            f'gra(?:nd|m)pa{_apostrophe}s *{_barbershop}': 'Grandpa\'s Barbershop',
             'saw': 'The Saw',
         }
     ),
@@ -716,6 +749,8 @@ _scent_pats = {
             'roug[eéè]re': 'Rougere',
             'mor[íiì]r so[ñna]+do': 'Morír Soñando',
             'seibo dominican chocolate': 'Seibo Dominican Chocolate',
+            'armon[íiì]a': 'Armonía',
+            f'windy city {_barbershop}': 'Windy City Barbershop',
         },
         lowpatterns={
             'ex?cursion': 'Excursion',
@@ -747,6 +782,7 @@ _scent_pats = {
             'pine tar': 'Pine Tar',
             'trade\\s*winds': 'Trade Winds',
             'ghost\\s*town': 'Ghost Town Barber',
+            'banana': 'Banana',
         }
     ),
 
@@ -794,6 +830,14 @@ _scent_pats = {
         lowpatterns={
             'nomad': 'Nomad',
             'lime': 'Lime',
+        }
+    ),
+
+    'Cremo': Sniffer(
+        lowpatterns={
+            '(?:classic|original)': 'Classic',
+            'sandalwood': 'Sandalwood',
+            f'sage{_any_and}citrus': 'Sage & Citrus',
         }
     ),
 
@@ -860,7 +904,7 @@ _scent_pats = {
             'massacre': 'Massacre of the Innocents',
             'b[\\- ?]cubed?': 'Blackberry Blossom Bay',
             '(?:b3|b³)': 'Blackberry Blossom Bay',
-            '\\?$': '? (Puzzle 2019)',
+            '\\?\\s*$': '? (Puzzle 2019)',
             'day\\s*man': 'Dayman',
             'night\\s*man': 'Nightman',
             'bse': 'Big Soap Energy',
@@ -869,6 +913,8 @@ _scent_pats = {
             'la for[êe]t de liguest': 'La Forêt de Liguest',
             f"catalan{_apostrophe}s prai?rie": "Catalan's Prairie",
             'dfs (?:2017|exclusive)': 'DFS 2017 LE',
+            'sol': 'Sunrise on LaSalle',
+            'puzzle$': 'Puzzle (2016)',
         },
         bases=[ 'bison', 'milksteak', 'icarus' ]
     ),
@@ -1164,6 +1210,7 @@ _scent_pats = {
             'inferno': 'Inferno',
             'no?\\. 1': 'N. 1',
             'patronus': 'Patronus',
+            'shibusa *(?:2|ii|two)': 'Shibusa 2',
             'shibusa': 'Shibusa',
             'Pino Alpestre': 'Pino Alpestre',
         }
@@ -1177,7 +1224,7 @@ _scent_pats = {
             'incense' + _any_and + 'oud': 'Incense & Oud',
             'Dapper Mallard': 'Dapper Mallard',
             'Frankenlime': 'Frankenlime',
-            'l' + _apostrophe + 'Avventura': 'l\'Avventura',
+            'l' + _apostrophe + 'av+entur+a': 'l\'Avventura',
             'magnolia' + _any_and + 'oud': 'Magnolia & Oud',
             'Maleki': 'Maleki',
             'Earl Grey': 'Earl Grey',
@@ -1186,6 +1233,7 @@ _scent_pats = {
             'Sandalwood Nobile': 'Sandalwood Nobile',
             'Valencia': 'Valencia',
             'conc[ao] d' + _apostrophe + 'or[oa]': 'Conca d\'Oro',
+            f'jasmine{_any_and}civet': 'Jasmine & Civet',
         },
         lowpatterns={
             'Aion': 'Aion',
@@ -1262,6 +1310,15 @@ _scent_pats = {
 
     'Henri et Victoria': Sniffer(
         patterns={
+            'beyond the void(?:: gadabout|)$': 'Beyond the Void: Gadabout',
+        },
+        lowpatterns={
+            'havana breeze': 'Havana Breeze',
+        }
+    ),
+
+    'Henri et Victoria': Sniffer(
+        patterns={
             'duc de santal': 'Duc de Santal',
             'cogna[cn]' + _any_and + 'cuban cigars': 'Cognac and Cuban Cigars',
             'la poire fran[çc]aise?': 'La Poire Française',
@@ -1301,7 +1358,9 @@ _scent_pats = {
             'mood indigo': 'Indigo',
             'almo[nm]d(?:' + _any_and + '|\\s*)leather': 'Almond Leather',
             'santa[^\W\s]+ noir[\u274ce]?': 'Santa Noir',
-            'santa noir': 'Santa Noir',
+            'santa(?:~~l~~|) noir': 'Santa Noir',
+            'f[úuù] d[àaá]o(?: \u798f|)': 'Fú Dào',
+            '\u798f(?: \\(?f[úuù] d[àaá]o\\)?|)': 'Fú Dào',
         },
         lowpatterns={
             'cirrus': 'Cirrus',
@@ -1334,8 +1393,8 @@ _scent_pats = {
         default_scent='Institut Karité'
     ),
 
-    'Irisch Moos': Sniffer(
-        default_scent='Irisch Moos'
+    'Sir Irisch Moos': Sniffer(
+        default_scent='Sir Irisch Moos'
     ),
 
     'Italian Barber': Sniffer(
@@ -1409,6 +1468,10 @@ _scent_pats = {
         }
     ),
 
+    'Lider': Sniffer(
+        default_scent='Classic'
+    ),
+
     'Liojuny Shaving': Sniffer(
         lowpatterns={
             'Tampa': 'Tampa',
@@ -1450,6 +1513,13 @@ _scent_pats = {
         lowpatterns={
             'j[öo]tun*': 'Jötun',
             'h[äa]xan*': 'Häxan',
+        }
+    ),
+
+    'Lush': Sniffer(
+        lowpatterns={
+            'dirty': 'Dirty',
+            'shaved ice': 'Shaved Ice',
         }
     ),
 
@@ -1600,8 +1670,9 @@ _scent_pats = {
             'ogham stone': 'Ogham Stone',
             'cat sid+he': 'Cat Sidhe',
             'barbershop de los muertos': 'Barbershop de los Muertos',
-            'gael laoch orange': 'Gael Laoch Orange',
-            'gael laoch': 'Gael Laoch',
+            'gael la?och orange': 'Gael Laoch Orange',
+            'gael la?och': 'Gael Laoch',
+            'ouroboros': 'Ouroboros',
         },
         lowpatterns={
             'bdlm': 'Barbershop de los Muertos',
@@ -1658,9 +1729,10 @@ _scent_pats = {
             'bare': 'Bare',
             'rawr\\b': 'Rawr',
             'lone\\s*star': 'Lonestar',
-            'fire\\s*fighter': 'Firefighter',
+            'fire\\s*fight?e?r?': 'Firefighter',
             'kaboom!?': 'Kaboom!',
             '24kt?': '24kt',
+            'plund[ea]r+': 'Plunder',
         },
         custom=custom_noble_otter
     ),
@@ -1698,6 +1770,15 @@ _scent_pats = {
         default_scent='Bay Rum'
     ),
 
+    'Old Spice': Sniffer(
+        lowpatterns={
+            '(?:original|classic)': 'Original',
+            '(?:fresh |)lime': 'Fresh Lime',
+            'musk': 'Musk',
+        },
+        default_scent='Original'
+    ),
+
     'Opus Ruri': Sniffer(
         patterns={
             'la salvia 4': 'Una Salvia 4',
@@ -1709,6 +1790,15 @@ _scent_pats = {
         lowpatterns={
             'rasage': 'Rasage',
             'tradition(?:al|)': 'Tradition',
+        }
+    ),
+
+    'Oz Shaving Co.': Sniffer(
+        patterns={
+            '(?:40|fou?rty) *crows': '40 Crows',
+        },
+        lowpatterns={
+            'tic?k *toc?k': 'Tick Tock',
         }
     ),
 
@@ -1954,6 +2044,7 @@ _scent_pats = {
             _apostrophe + 'tis the saison': '\'Tis the Saison',
             'pan de muerto': 'Pan de Muerto',
             'Frankincense, Anise,?' + _any_and + 'Orange': 'Pan de Muerto',
+            f'(?:9|nine) days up nort{_apostrophe}h?': '9 Days up Nort\'',
         },
         lowpatterns={
             'cedar[^\w]+lime': 'Cedar-Lime',
@@ -2139,8 +2230,20 @@ _scent_pats = {
             'lavender(?:' + _any_and + '|)vanilla': 'Lavender & Vanilla',
             'bergamot' + _any_and + 'sandalwood': 'Bergamot & Sandalwood',
             'oakmoss' + _any_and + 'sandalwood': 'Oakmoss & Sandalwood',
+            'ssl': 'Seaforth! Sea Spice Lime',
         },
         bases=[ '20.1' ]
+    ),
+
+    'Squadron': Sniffer(
+        patterns={
+            f'group captain{_apostrophe}s blend': 'Group Captain\'s Blend',
+            'red lead': 'Red Lead',
+            'six one seven': 'Six One Seven',
+        },
+        lowpatterns={
+            '6-?1-?7': 'Six One Seven',
+        }
     ),
 
     'Stirling Soap Co.': Sniffer(
@@ -2156,11 +2259,11 @@ _scent_pats = {
             'iced pineapple': 'Iced Pineapple',
             'scarn': 'Scarn',
             'executive man': 'Executive Man',
-            'haverford': 'Haverford',
+            'haverford?': 'Haverford',
             'unscented (?:with |)beeswax': 'Unscented with Beeswax',
             'naked' + _any_and + 'smooth': 'Naked & Smooth',
             'vanilla bean e[sx]presso': 'Vanilla Bean Espresso',
-            '(?:scot' + _apostrophe + 's|scotch) pine sheep': 'Scots Pine Sheep',
+            f'(?:scot+{_apostrophe}s|scotch|) pine sheep': 'Scots Pine Sheep',
             'electric sheep': 'Electric Sheep',
             'vanilla sandalwood$': 'Vanilla Sandalwood',
             'meghalaya(?: *\\(SFWS\\)|)': 'Meghalaya',
@@ -2189,8 +2292,11 @@ _scent_pats = {
             'almond (?:creme|cream)': 'Almond Creme',
             'blood on steel': 'Tsuka', # renamed
             'sa[nm]d(?:al|le)wood': 'Sandalwood',
-            'one': 'Stirling One',
             'grapefruit(?:\\(?with menthol\\)?|)': 'Grapefruit',
+            'sandi?piper': 'Sandpiper',
+            'one': 'Stirling One',
+            'emp$': 'EMP',
+            'em$': 'Executive Man',
         },
         bases=[ 'mutton tallow', 'mutton', 'glacial', 'beeswax' ]
     ),
@@ -2269,8 +2375,10 @@ _scent_pats = {
             'bell\\s*ringer': 'Bell Ringer',
             'cannonball!?': 'Cannonball!',
             'mountain laurel': 'Mountain Laurel',
-            'roty 2020': 'ROTY 2020', # K1986
-            'roty 2021': 'ROTY 2021', # jwoods23
+            '(?:lg |)roty 2020': 'ROTY 2020', # K1986
+            '(?:lg |)2020 roty': 'ROTY 2020',
+            '(?:lg |)roty 2021': 'ROTY 2021', # jwoods23
+            '(?:lg |)2021 roty': 'ROTY 2021',
         },
         lowpatterns={
             'recess': 'Recess',
@@ -2310,7 +2418,7 @@ _scent_pats = {
 
     'Taylor of Old Bond Street': Sniffer(
         patterns={
-            'jermyn st(?:reet|)\\.?': 'Jermyn Street',
+            'jermyn(?: *st(?:reet|)\\.?|)': 'Jermyn Street',
             'mr\\.? *taylor' + _apostrophe + 's?': 'Mr Taylors',
             'eton college': 'Eton College',
         },
@@ -2385,7 +2493,7 @@ _scent_pats = {
             '(?:shaving |)stick': 'Stick', # one description says almond
             'almond': 'Almond',
         },
-        bases=[ 'soft shaving soap', 'soft' ]
+        bases=[ 'soft shaving soap', 'soft', 'hard' ]
     ),
 
     'Van der Hagen': Sniffer(
@@ -2398,6 +2506,15 @@ _scent_pats = {
 
     'Veleiro': Sniffer(
         default_scent='Veleiro'
+    ),
+
+    'Vi-John': Sniffer(
+        lowpatterns={
+            'classic': 'Classic',
+            'icy mint': 'Icy Mint',
+            'tropical lime': 'Tropical Lime',
+            'musk': 'Musk',
+        }
     ),
 
     'Via Barberia': Sniffer(
@@ -2589,6 +2706,7 @@ _scent_pats = {
             '(?:the |)gent': 'The Gent',
             '(?:the |)traditionalist': 'The Traditionalist',
             '(?:the |)navigator': 'The Navigator',
+            '(?:the |)rambler': 'The Rambler',
             'cocnut nanas': 'Coconut Nanas',
             'black *wood': 'Black Wood',
         },
@@ -2621,7 +2739,7 @@ def _compile_all():
             comp = { }
             isonames = { }
             for pattern in map:
-                comp[re.compile(_prefix + pattern + _suffix, re.IGNORECASE)] = map[pattern]
+                comp[comp_pattern(pattern)] = map[pattern]
                 isonames[map[pattern]] = 1
             _compiled_pats[maker] = comp
             _add_unique(isonames)
